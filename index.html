@@ -192,7 +192,6 @@
             analyzeCoins();
             
             async function analyzeCoins() {
-                // إظهار حالة التحميل
                 loadingEl.style.display = 'block';
                 errorEl.style.display = 'none';
                 recommendationsContainer.innerHTML = '';
@@ -201,13 +200,8 @@
                     const interval = intervalSelect.value;
                     const limit = parseInt(limitSelect.value);
                     
-                    // محاكاة للتقدم (في التطبيق الحقيقي ستستخدم API الفعلي)
                     simulateProgress();
-                    
-                    // الحصول على البيانات (هنا نستخدم بيانات وهمية للعرض)
-                    const recommendations = await getRecommendations(limit, interval);
-                    
-                    // عرض التوصيات
+                    const recommendations = await getBinanceData(limit, interval);
                     displayRecommendations(recommendations);
                     
                 } catch (error) {
@@ -224,60 +218,98 @@
                 const interval = setInterval(() => {
                     progress += 10;
                     progressEl.textContent = `${progress}%`;
-                    if (progress >= 100) {
-                        clearInterval(interval);
-                    }
+                    if (progress >= 100) clearInterval(interval);
                 }, 300);
             }
             
-            async function getRecommendations(limit, interval) {
-               async function getRealDataFromBinance() {
-    const response = await fetch('https://api.binance.com/api/v3/ticker/24hr');
-    const data = await response.json();
-    // معالجة البيانات الحقيقية هنا
-}
+            async function getBinanceData(limit, interval) {
+                try {
+                    // 1. جلب بيانات 24 ساعة من Binance
+                    const response = await fetch('https://api.binance.com/api/v3/ticker/24hr');
+                    const allCoins = await response.json();
+                    
+                    // 2. تصفية العملات المزدوجة مع USDT
+                    const usdtPairs = allCoins.filter(coin => coin.symbol.endsWith('USDT'));
+                    
+                    // 3. ترتيب حسب نسبة التغير
+                    const sortedCoins = usdtPairs.sort((a, b) => 
+                        parseFloat(b.priceChangePercent) - parseFloat(a.priceChangePercent)
+                    );
+                    
+                    // 4. أخذ العدد المطلوب
+                    const topCoins = sortedCoins.slice(0, limit);
+                    
+                    // 5. جلب بيانات إضافية لكل عملة
+                    const coinsWithDetails = await Promise.all(
+                        topCoins.map(async coin => {
+                            // جلب بيانات الشموع التاريخية
+                            const klinesUrl = `https://api.binance.com/api/v3/klines?symbol=${coin.symbol}&interval=${interval}&limit=100`;
+                            const klinesResponse = await fetch(klinesUrl);
+                            const klines = await klinesResponse.json();
+                            
+                            // استخراج الأسعار التاريخية
+                            const closes = klines.map(k => parseFloat(k[4]));
+                            const highs = klines.map(k => parseFloat(k[2]));
+                            const lows = klines.map(k => parseFloat(k[3]));
+                            
+                            // حساب الأهداف (3 مستويات فوق السعر الحالي)
+                            const currentPrice = parseFloat(coin.lastPrice);
+                            const targets = [
+                                currentPrice * 1.02,
+                                currentPrice * 1.05,
+                                currentPrice * 1.08
+                            ];
+                            
+                            return {
+                                symbol: coin.symbol,
+                                current_price: currentPrice,
+                                change_24h: parseFloat(coin.priceChangePercent),
+                                volume: parseFloat(coin.quoteVolume),
+                                rsi: calculateRSI(closes),
+                                support: Math.min(...lows),
+                                resistance: Math.max(...highs),
+                                targets: targets,
+                                history: closes // للرسم البياني
+                            };
+                        })
+                    );
+                    
+                    return coinsWithDetails;
+                    
+                } catch (error) {
+                    console.error('Error fetching Binance data:', error);
+                    throw new Error('فشل في جلب البيانات من Binance');
+                }
+            }
+            
+            function calculateRSI(closes) {
+                if (closes.length < 14) return 50; // قيمة افتراضية إذا لم تكف البيانات
                 
-                await new Promise(resolve => setTimeout(resolve, 2000));
+                let gains = 0;
+                let losses = 0;
                 
-                const mockData = [
-                    {
-                        symbol: "BTCUSDT",
-                        current_price: 51423.50,
-                        change_24h: 5.72,
-                        volume: 2850000000,
-                        rsi: 62.3,
-                        support: 50210.00,
-                        resistance: 52500.00,
-                        targets: [52000, 53000, 54000]
-                    },
-                    {
-                        symbol: "ETHUSDT",
-                        current_price: 2781.40,
-                        change_24h: 4.15,
-                        volume: 1850000000,
-                        rsi: 58.7,
-                        support: 2720.00,
-                        resistance: 2850.00,
-                        targets: [2820, 2850, 2900]
-                    },
-                    {
-                        symbol: "SOLUSDT",
-                        current_price: 142.80,
-                        change_24h: 8.92,
-                        volume: 950000000,
-                        rsi: 65.1,
-                        support: 138.00,
-                        resistance: 150.00,
-                        targets: [145, 148, 152]
-                    }
-                ];
+                for (let i = 1; i <= 14; i++) {
+                    const diff = closes[i] - closes[i-1];
+                    if (diff >= 0) gains += diff;
+                    else losses -= diff;
+                }
                 
-                return mockData.slice(0, limit);
+                const avgGain = gains / 14;
+                const avgLoss = losses / 14;
+                
+                if (avgLoss === 0) return 100; // تجنب القسمة على صفر
+                
+                const rs = avgGain / avgLoss;
+                return 100 - (100 / (1 + rs));
             }
             
             function displayRecommendations(recommendations) {
-                if (recommendations.length === 0) {
-                    recommendationsContainer.innerHTML = '<div class="recommendation"><p>لا توجد توصيات متاحة في الوقت الحالي.</p></div>';
+                if (!recommendations || recommendations.length === 0) {
+                    recommendationsContainer.innerHTML = `
+                        <div class="recommendation">
+                            <p>لا توجد توصيات متاحة في الوقت الحالي.</p>
+                        </div>
+                    `;
                     return;
                 }
                 
@@ -299,7 +331,7 @@
                         <div class="details">
                             <div class="detail-item">
                                 <div class="detail-label">السعر الحالي</div>
-                                <div class="detail-value">${coin.current_price.toLocaleString()} USDT</div>
+                                <div class="detail-value">${coin.current_price.toLocaleString('en-US', {minimumFractionDigits: 2, maximumFractionDigits: 8})} USDT</div>
                             </div>
                             <div class="detail-item">
                                 <div class="detail-label">حجم التداول (24h)</div>
@@ -311,11 +343,11 @@
                             </div>
                             <div class="detail-item">
                                 <div class="detail-label">مستوى الدعم</div>
-                                <div class="detail-value">${coin.support.toLocaleString()}</div>
+                                <div class="detail-value">${coin.support.toLocaleString('en-US', {minimumFractionDigits: 2, maximumFractionDigits: 8})}</div>
                             </div>
                             <div class="detail-item">
                                 <div class="detail-label">مستوى المقاومة</div>
-                                <div class="detail-value">${coin.resistance.toLocaleString()}</div>
+                                <div class="detail-value">${coin.resistance.toLocaleString('en-US', {minimumFractionDigits: 2, maximumFractionDigits: 8})}</div>
                             </div>
                         </div>
                         
@@ -329,7 +361,7 @@
                                 const profit = ((target - coin.current_price) / coin.current_price * 100).toFixed(2);
                                 return `
                                     <div class="target">
-                                        <div class="target-level">الهدف ${index + 1}: ${target.toLocaleString()} USDT</div>
+                                        <div class="target-level">الهدف ${index + 1}: ${target.toLocaleString('en-US', {minimumFractionDigits: 2, maximumFractionDigits: 8})} USDT</div>
                                         <div class="target-profit">+${profit}%</div>
                                     </div>
                                 `;
@@ -338,29 +370,13 @@
                     `;
                     
                     recommendationsContainer.appendChild(coinEl);
-                    
-                    // رسم الرسم البياني
                     renderChart(`chart-${coin.symbol}`, coin);
                 });
             }
             
             function renderChart(canvasId, coinData) {
                 const ctx = document.getElementById(canvasId).getContext('2d');
-                
-                // بيانات وهمية للرسم البياني
-                const labels = [];
-                const data = [];
-                
-                for (let i = 0; i < 30; i++) {
-                    labels.push(`اليوم ${30 - i}`);
-                    const basePrice = coinData.current_price * 0.9;
-                    const randomFactor = 0.1 * Math.sin(i * 0.5) + 0.1 * Math.random();
-                    data.push(basePrice * (1 + randomFactor));
-                }
-                
-                // إضافة السعر الحالي
-                labels.push('الآن');
-                data.push(coinData.current_price);
+                const labels = Array.from({length: coinData.history.length}, (_, i) => `قبل ${coinData.history.length - i} شمعة`);
                 
                 new Chart(ctx, {
                     type: 'line',
@@ -368,7 +384,7 @@
                         labels: labels,
                         datasets: [{
                             label: `سعر ${coinData.symbol}`,
-                            data: data,
+                            data: coinData.history,
                             borderColor: '#3498db',
                             backgroundColor: 'rgba(52, 152, 219, 0.1)',
                             tension: 0.4,
