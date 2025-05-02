@@ -235,6 +235,8 @@
                     
                     // 2. تصفية العملات المزدوجة مع USDT
                     const usdtPairs = allCoins.filter(coin => coin.symbol.endsWith('USDT'));
+usdtPairs.sort((a, b) => parseFloat(b.quoteVolume) - parseFloat(a.quoteVolume));
+
                     
                     // 3. ترتيب حسب نسبة التغير
                     const sortedCoins = usdtPairs.sort((a, b) => 
