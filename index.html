@@ -6,6 +6,9 @@
     <title>توصيات-ياسر</title>
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/chartjs-plugin-annotation@1.0.2"></script>
+    <div id="last-update" style="text-align: left; margin-top: 10px; font-size: 12px; color: #7f8c8d;">
+    آخر تحديث: <span id="update-time">لم يتم التحديث بعد</span>
+</div>
     <style>
         body {
             font-family: 'Arial', sans-serif;
@@ -151,17 +154,16 @@
             margin-top: 20px;
         }
         
-        .main-chart {
-            flex: 3;
-            height: 350px;
-        }
-        
-        .indicators-sidebar {
-            flex: 1;
-            display: flex;
-            flex-direction: column;
-            gap: 15px;
-        }
+       .main-chart {
+    flex: 1; /* كان 2 أو 3 */
+    width: 50%; /* إضافة هذه الخاصية */
+    height: 300px; /* يمكن تعديل الارتفاع */
+}
+
+.indicators-sidebar {
+    flex: 1;
+    width: 45%; /* تعديل العرض */
+}
         
         .indicator-chart {
             height: 110px;
@@ -274,7 +276,7 @@
                 flex-direction: column;
             }
             .main-chart {
-                height: 300px;
+                height: 260px;
             }
             #darkModeToggle {
                 bottom: 10px;
@@ -283,6 +285,14 @@
                 font-size: 14px;
             }
         }
+        chart-wrapper {
+    gap: 10px; /* تقليل المسافة بين الشارت والمؤشرات */
+    margin-top: 15px;
+}
+
+.indicator-chart {
+    height: 100px; /* تصغير ارتفاع المؤشرات */
+}
     </style>
 </head>
 <body>
@@ -372,7 +382,12 @@
                 } finally {
                     loadingEl.style.display = 'none';
                 }
-            }
+         const usdtPairs = allCoins24h.filter(coin => 
+    coin.symbol.endsWith('USDT') && 
+    !coin.symbol.includes('UP') && 
+    !coin.symbol.includes('DOWN') &&
+    parseFloat(coin.quoteVolume) > 10000 // تصفية العملات قليلة السيولة
+);
             
             function simulateProgress() {
                 let progress = 0;
@@ -400,6 +415,7 @@
                         !coin.symbol.includes('UP') && 
                         !coin.symbol.includes('DOWN')
                     );
+                  }
                     
                     // دمج البيانات
                     const mergedData = usdtPairs.map(coin => {
@@ -688,20 +704,25 @@
                 });
             }
             
-            function renderIndicators(coin) {
-                const isDarkMode = document.body.classList.contains('dark-mode');
-                const labels = Array.from({length: coin.history.length}, (_, i) => ``);
-                
-                // إنشاء ألوان الفوليوم حسب اتجاه السعر
-                const volumeColors = [];
-                for (let i = 1; i < coin.history.length; i++) {
-                    if (coin.history[i] >= coin.history[i-1]) {
-                        volumeColors.push('volume-up');
-                    } else {
-                        volumeColors.push('volume-down');
-                    }
-                }
-                volumeColors.push(volumeColors[volumeColors.length-1] || 'volume-up');
+            const volumeCtx = document.getElementById(`volume-${coin.symbol}`).getContext('2d');
+new Chart(volumeCtx, {
+    type: 'bar',
+    data: {
+        labels: labels,
+        datasets: [{
+            label: 'Volume',
+            data: coin.volumes,
+            backgroundColor: coin.history.map((_, i) => 
+                i > 0 && coin.history[i] >= coin.history[i-1] ? 
+                (isDarkMode ? '#2ecc71' : '#27ae60') : 
+                (isDarkMode ? '#e74c3c' : '#c0392b')
+            ),
+            borderColor: 'transparent',
+            borderWidth: 0
+        }]
+    },
+    options: volumeChartOptions
+});
                 
                 // رسم MACD
                 const macdCtx = document.getElementById(`macd-${coin.symbol}`).getContext('2d');
