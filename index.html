@@ -4,66 +4,79 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>توصيات-ياسر</title>
-    <!-- Load Chart.js first -->
+    <!-- Load libraries with fallback -->
     <script src="https://cdn.jsdelivr.net/npm/chart.js@3.9.1/dist/chart.min.js"></script>
-    <!-- Then load the date adapter -->
     <script src="https://cdn.jsdelivr.net/npm/chartjs-adapter-date-fns@2.3.0/dist/chartjs-adapter-date-fns.min.js"></script>
-    <!-- Finally load the financial chart extension -->
     <script src="https://cdn.jsdelivr.net/npm/chartjs-chart-financial@1.2.0/dist/chartjs-chart-financial.min.js"></script>
-    
     <style>
-        /* ... (ابقى على أنماط CSS كما هي) ... */
+        /* ... (ابقى أنماط CSS كما هي) ... */
     </style>
 </head>
 <body>
-    <!-- ... (ابقى على هيكل HTML كما هو) ... -->
+    <div class="container">
+        <h1>توصيات - ياسر</h1>
+        
+        <div class="controls">
+            <select id="interval">
+                <option value="1h">1 ساعة</option>
+                <option value="4h">4 ساعات</option>
+                <option value="1d" selected>1 يوم</option>
+            </select>
+            <select id="limit">
+                <option value="10">أفضل 10 عملات</option>
+                <option value="20">أفضل 20 عملة</option>
+                <option value="50">أفضل 50 عملة</option>
+            </select>
+            <button id="analyze-btn">تحليل العملات</button>
+            <button id="refresh-btn">تحديث البيانات</button>
+            <button id="darkModeToggle">🌙 الوضع الليلي</button>
+        </div>
+        
+        <div class="loading" id="loading">
+            جاري تحليل البيانات... <span id="progress"></span>
+        </div>
+        
+        <div class="error" id="error"></div>
+        
+        <div id="recommendations-container"></div>
+    </div>
 
     <script>
-        // دالة لضمان تحميل المكتبات
-        function waitForLibraries() {
-            return new Promise((resolve, reject) => {
-                let attempts = 0;
-                const maxAttempts = 10;
-                const interval = setInterval(() => {
-                    if (window.Chart && window.Chart.controllers && window.Chart.controllers.candlestick) {
-                        clearInterval(interval);
-                        resolve();
-                    } else if (attempts >= maxAttempts) {
-                        clearInterval(interval);
-                        reject(new Error('فشل في تحميل المكتبات المطلوبة'));
-                    }
-                    attempts++;
-                }, 100);
-            });
+        // دالة لفحص وجود العناصر
+        function ensureElementExists(id) {
+            const el = document.getElementById(id);
+            if (!el) {
+                throw new Error(`العنصر #${id} غير موجود في الصفحة`);
+            }
+            return el;
         }
 
-        document.addEventListener('DOMContentLoaded', async function() {
-            try {
-                // انتظر تحميل المكتبات
-                await waitForLibraries();
-                
-                // تأكد من وجود جميع العناصر المطلوبة
-                const requiredElements = [
-                    'analyze-btn', 'refresh-btn', 'interval', 'limit',
-                    'loading', 'error', 'recommendations-container', 'darkModeToggle'
-                ];
-                
-                requiredElements.forEach(id => {
-                    if (!document.getElementById(id)) {
-                        throw new Error(`العنصر #${id} غير موجود في الصفحة`);
-                    }
-                });
+        // دالة لضمان تحميل المكتبات
+        function checkLibrariesLoaded() {
+            if (!window.Chart || !window.Chart.controllers || !window.Chart.controllers.candlestick) {
+                throw new Error('مكتبات الرسوم البيانية لم يتم تحميلها بشكل صحيح');
+            }
+        }
 
-                const analyzeBtn = document.getElementById('analyze-btn');
-                const refreshBtn = document.getElementById('refresh-btn');
-                const intervalSelect = document.getElementById('interval');
-                const limitSelect = document.getElementById('limit');
-                const loadingEl = document.getElementById('loading');
-                const errorEl = document.getElementById('error');
-                const recommendationsContainer = document.getElementById('recommendations-container');
-                const darkModeToggle = document.getElementById('darkModeToggle');
+        async function main() {
+            try {
+                // التحقق من العناصر الأساسية
+                const errorEl = ensureElementExists('error');
                 
-                // Dark Mode Toggle
+                // التحقق من المكتبات
+                checkLibrariesLoaded();
+                
+                // الحصول على العناصر
+                const analyzeBtn = ensureElementExists('analyze-btn');
+                const refreshBtn = ensureElementExists('refresh-btn');
+                const intervalSelect = ensureElementExists('interval');
+                const limitSelect = ensureElementExists('limit');
+                const loadingEl = ensureElementExists('loading');
+                const progressEl = ensureElementExists('progress');
+                const recommendationsContainer = ensureElementExists('recommendations-container');
+                const darkModeToggle = ensureElementExists('darkModeToggle');
+                
+                // إعداد الوضع الليلي
                 if (localStorage.getItem('darkMode') === 'enabled') {
                     document.body.classList.add('dark-mode');
                     darkModeToggle.textContent = '☀️ الوضع النهاري';
@@ -72,24 +85,28 @@
                 darkModeToggle.addEventListener('click', () => {
                     document.body.classList.toggle('dark-mode');
                     const isDarkMode = document.body.classList.contains('dark-mode');
-                    
                     darkModeToggle.textContent = isDarkMode ? '☀️ الوضع النهاري' : '🌙 الوضع الليلي';
                     localStorage.setItem('darkMode', isDarkMode ? 'enabled' : 'disabled');
                     
-                    // إعادة تحميل البيانات عند تغيير الوضع
                     if (recommendationsContainer.innerHTML !== '') {
                         analyzeCoins();
                     }
                 });
-                
-                // ... (ابقى على بقية الدوال كما هي) ...
+
+                // ... (أضف بقية الدوال هنا) ...
 
             } catch (error) {
                 console.error('Error:', error);
-                document.getElementById('error').textContent = error.message;
-                document.getElementById('error').style.display = 'block';
+                const errorEl = document.getElementById('error');
+                if (errorEl) {
+                    errorEl.textContent = error.message;
+                    errorEl.style.display = 'block';
+                }
             }
-        });
+        }
+
+        // بدء التطبيق بعد تحميل الصفحة
+        document.addEventListener('DOMContentLoaded', main);
     </script>
 </body>
 </html>
