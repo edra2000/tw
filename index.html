@@ -566,5 +566,37 @@
   Chart.defaults.plugins.title.display = true;
 </script>
 
+
+<!-- Chart.js + Luxon + Financial plugin setup -->
+<script src="https://cdn.jsdelivr.net/npm/chart.js@3.9.1/dist/chart.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/luxon@3.4.3/build/global/luxon.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/chartjs-adapter-luxon@1.3.1/dist/chartjs-adapter-luxon.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/chartjs-chart-financial@3.3.0/dist/chartjs-chart-financial.min.js"></script>
+
+<script>
+  const {
+    Chart,
+    FinancialController,
+    CandlestickController,
+    FinancialElement,
+    TimeScale,
+    LinearScale,
+    Tooltip,
+    Legend,
+    Title
+  } = window;
+
+  Chart.register(
+    FinancialController,
+    CandlestickController,
+    FinancialElement,
+    TimeScale,
+    LinearScale,
+    Tooltip,
+    Legend,
+    Title
+  );
+</script>
+
 </body>
 </html>
