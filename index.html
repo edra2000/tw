@@ -4,7 +4,8 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>توصيات-ياسر</title>
-    <!-- مكتبات أساسية مع روابط احتياطية -->
+    
+    <!-- مكتبات أساسية مع روابط بديلة -->
     <script src="https://cdn.jsdelivr.net/npm/chart.js@3.9.1/dist/chart.min.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/chartjs-adapter-date-fns@2.3.0/dist/chartjs-adapter-date-fns.min.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/chartjs-chart-financial@1.2.0/dist/chartjs-chart-financial.min.js"></script>
@@ -18,86 +19,52 @@
             background-color: #f5f5f5;
             color: #333;
         }
-        
-        .container {
-            max-width: 1200px;
-            margin: 0 auto;
-            background: white;
-            padding: 20px;
-            border-radius: 10px;
-            box-shadow: 0 0 10px rgba(0,0,0,0.1);
-        }
-        
-        /* ... (أضف بقية الأنماط هنا) ... */
+        /* ... (أبقِ بقية الأنماط كما هي) ... */
     </style>
 </head>
 <body>
-    <div class="container">
-        <h1>توصيات - ياسر</h1>
-        
-        <div class="controls">
-            <select id="interval">
-                <option value="1h">1 ساعة</option>
-                <option value="4h">4 ساعات</option>
-                <option value="1d" selected>1 يوم</option>
-            </select>
-            <select id="limit">
-                <option value="10">أفضل 10 عملات</option>
-                <option value="20">أفضل 20 عملة</option>
-                <option value="50">أفضل 50 عملة</option>
-            </select>
-            <button id="analyze-btn">تحليل العملات</button>
-            <button id="refresh-btn">تحديث البيانات</button>
-            <button id="darkModeToggle">🌙 الوضع الليلي</button>
-        </div>
-        
-        <div class="loading" id="loading" style="display: none;">
-            جاري تحليل البيانات... <span id="progress"></span>
-        </div>
-        
-        <div class="error" id="error" style="display: none;"></div>
-        
-        <div id="recommendations-container"></div>
-    </div>
+    <!-- ... (أبقِ هيكل HTML كما هو) ... -->
 
     <script>
-        // تأكد من وجود العناصر
-        function getElementOrThrow(id) {
-            const el = document.getElementById(id);
-            if (!el) throw new Error(`Element #${id} not found`);
-            return el;
+        // دالة لتحميل المكتبات بشكل آمن
+        function loadLibrary(src) {
+            return new Promise((resolve, reject) => {
+                const script = document.createElement('script');
+                script.src = src;
+                script.onload = resolve;
+                script.onerror = () => reject(new Error(`فشل تحميل المكتبة: ${src}`));
+                document.head.appendChild(script);
+            });
         }
 
-        // دالة رئيسية معزولة
+        async function loadRequiredLibraries() {
+            const libraries = [
+                'https://cdn.jsdelivr.net/npm/chart.js@3.9.1/dist/chart.min.js',
+                'https://cdn.jsdelivr.net/npm/chartjs-adapter-date-fns@2.3.0/dist/chartjs-adapter-date-fns.min.js',
+                'https://cdn.jsdelivr.net/npm/chartjs-chart-financial@1.2.0/dist/chartjs-chart-financial.min.js'
+            ];
+            
+            try {
+                await Promise.all(libraries.map(loadLibrary));
+                
+                // تأخر إضافي لضمان تحميل المكتبات
+                await new Promise(resolve => setTimeout(resolve, 100));
+                
+                if (!window.Chart || !window.Chart.controllers?.candlestick) {
+                    throw new Error('المكتبات لم يتم تهيئتها بشكل صحيح');
+                }
+            } catch (error) {
+                console.error('Error loading libraries:', error);
+                throw error;
+            }
+        }
+
         async function initializeApp() {
             try {
-                // الحصول على العناصر الأساسية
-                const elements = {
-                    analyzeBtn: getElementOrThrow('analyze-btn'),
-                    refreshBtn: getElementOrThrow('refresh-btn'),
-                    intervalSelect: getElementOrThrow('interval'),
-                    limitSelect: getElementOrThrow('limit'),
-                    loadingEl: getElementOrThrow('loading'),
-                    errorEl: getElementOrThrow('error'),
-                    progressEl: getElementOrThrow('progress'),
-                    container: getElementOrThrow('recommendations-container'),
-                    darkModeToggle: getElementOrThrow('darkModeToggle')
-                };
-
-                // التحقق من المكتبات
-                if (!window.Chart || !window.Chart.controllers?.candlestick) {
-                    throw new Error('Failed to load required libraries');
-                }
-
-                // إعداد الوضع الليلي
-                elements.darkModeToggle.addEventListener('click', toggleDarkMode);
+                // تحميل المكتبات أولاً
+                await loadRequiredLibraries();
                 
-                // أحداث الأزرار
-                elements.analyzeBtn.addEventListener('click', analyzeCoins);
-                elements.refreshBtn.addEventListener('click', analyzeCoins);
-                
-                // تحليل أولي
-                await analyzeCoins();
+                // ... (أبقِ بقية كود التهيئة كما هو) ...
                 
             } catch (error) {
                 console.error('Initialization error:', error);
@@ -108,8 +75,6 @@
                 }
             }
         }
-
-        // ... (أضف بقية الدوال هنا) ...
 
         // بدء التطبيق بعد تحميل الصفحة
         document.addEventListener('DOMContentLoaded', initializeApp);
