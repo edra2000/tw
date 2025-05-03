@@ -4,76 +4,30 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>توصيات-ياسر</title>
-    <script src="https://cdn.jsdelivr.net/npm/chart.js@3.7.1"></script>
-    <script src="https://cdn.jsdelivr.net/npm/chartjs-chart-financial@1.0.0"></script>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
     <style>
-        /* متغيرات الألوان للوضع العادي */
-        :root {
-            --bg-color: #f5f5f5;
-            --container-bg: #F5F5F7;
-            --text-color: #333;
-            --heading-color: #2c3e50;
-            --controls-bg: #ecf0f1;
-            --card-bg: white;
-            --border-color: #eee;
-            --button-bg: #3498db;
-            --button-hover: #2980b9;
-            --detail-bg: #f9f9f9;
-            --target-bg: #f1f9fe;
-            --positive-bg: rgba(46, 204, 113, 0.2);
-            --positive-text: #27ae60;
-            --negative-bg: rgba(231, 76, 60, 0.2);
-            --negative-text: #c0392b;
-            --candle-up: #27ae60;
-            --candle-down: #c0392b;
-        }
-
-        /* متغيرات الألوان للوضع الليلي */
-        .dark-mode {
-            --bg-color: #121212;
-            --container-bg: #1e1e1e;
-            --text-color: #e0e0e0;
-            --heading-color: #bb86fc;
-            --controls-bg: #2d2d2d;
-            --card-bg: #2d2d2d;
-            --border-color: #444;
-            --button-bg: #bb86fc;
-            --button-hover: #9a67ea;
-            --detail-bg: #333;
-            --target-bg: #333;
-            --positive-bg: rgba(46, 204, 113, 0.3);
-            --positive-text: #2ecc71;
-            --negative-bg: rgba(231, 76, 60, 0.3);
-            --negative-text: #e74c3c;
-            --candle-up: #2ecc71;
-            --candle-down: #e74c3c;
-        }
-
         body {
             font-family: 'Arial', sans-serif;
-            background-color: var(--bg-color);
+            background-color: #f5f5f5;
             margin: 0;
             padding: 20px;
-            color: var(--text-color);
-            transition: background-color 0.3s, color 0.3s;
+            color: #333;
         }
         .container {
             max-width: 1200px;
             margin: 0 auto;
-            background: var(--container-bg);
+            background: #F5F5F7;
             padding: 20px;
             border-radius: 10px;
             box-shadow: 0 0 10px rgba(0,0,0,0.1);
-            transition: background-color 0.3s;
         }
         h1 {
-            color: var(--heading-color);
+            color: #2c3e50;
             text-align: center;
             margin-bottom: 30px;
-            transition: color 0.3s;
         }
         .controls {
-            background: var(--controls-bg);
+            background: #ecf0f1;
             padding: 15px;
             border-radius: 8px;
             margin-bottom: 20px;
@@ -81,33 +35,30 @@
             flex-wrap: wrap;
             gap: 10px;
             justify-content: center;
-            transition: background-color 0.3s;
         }
         select, button {
             padding: 10px 15px;
-            border: 1px solid var(--border-color);
+            border: 1px solid #ddd;
             border-radius: 5px;
             font-size: 16px;
-            transition: all 0.3s;
         }
         button {
-            background-color: var(--button-bg);
+            background-color: #3498db;
             color: white;
             cursor: pointer;
             border: none;
             transition: background-color 0.3s;
         }
         button:hover {
-            background-color: var(--button-hover);
+            background-color: #2980b9;
         }
         .recommendation {
-            background: var(--card-bg);
-            border: 1px solid var(--border-color);
+            background: white;
+            border: 1px solid #eee;
             border-radius: 8px;
             padding: 15px;
             margin-bottom: 15px;
             box-shadow: 0 2px 5px rgba(0,0,0,0.05);
-            transition: background-color 0.3s, border-color 0.3s;
         }
         .coin-header {
             display: flex;
@@ -115,12 +66,12 @@
             align-items: center;
             margin-bottom: 10px;
             padding-bottom: 10px;
-            border-bottom: 1px solid var(--border-color);
+            border-bottom: 1px solid #eee;
         }
         .coin-name {
             font-weight: bold;
             font-size: 18px;
-            color: var(--heading-color);
+            color: #2c3e50;
         }
         .price-change {
             font-weight: bold;
@@ -128,12 +79,12 @@
             border-radius: 5px;
         }
         .positive {
-            background-color: var(--positive-bg);
-            color: var(--positive-text);
+            background-color: rgba(46, 204, 113, 0.2);
+            color: #27ae60;
         }
         .negative {
-            background-color: var(--negative-bg);
-            color: var(--negative-text);
+            background-color: rgba(231, 76, 60, 0.2);
+            color: #c0392b;
         }
         .details {
             display: grid;
@@ -142,10 +93,9 @@
             margin-bottom: 15px;
         }
         .detail-item {
-            background: var(--detail-bg);
+            background: #f9f9f9;
             padding: 10px;
             border-radius: 5px;
-            transition: background-color 0.3s;
         }
         .detail-label {
             font-size: 12px;
@@ -165,15 +115,14 @@
             padding: 8px;
             margin-bottom: 5px;
             border-radius: 5px;
-            background: var(--target-bg);
-            transition: background-color 0.3s;
+            background: #f1f9fe;
         }
         .target-level {
             font-weight: bold;
         }
         .target-profit {
             font-weight: bold;
-            color: var(--positive-text);
+            color: #27ae60;
         }
         .chart-container {
             height: 300px;
@@ -214,7 +163,6 @@
             </select>
             <button id="analyze-btn">تحليل العملات</button>
             <button id="refresh-btn">تحديث البيانات</button>
-            <button id="darkModeToggle">🌙 الوضع الليلي</button>
         </div>
         
         <div class="loading" id="loading">
@@ -235,31 +183,6 @@
             const loadingEl = document.getElementById('loading');
             const errorEl = document.getElementById('error');
             const recommendationsContainer = document.getElementById('recommendations-container');
-            const darkModeToggle = document.getElementById('darkModeToggle');
-            
-            // Dark Mode Toggle
-            if (localStorage.getItem('darkMode') === 'enabled') {
-                document.body.classList.add('dark-mode');
-                darkModeToggle.textContent = '☀️ الوضع النهاري';
-            }
-            
-            darkModeToggle.addEventListener('click', () => {
-                document.body.classList.toggle('dark-mode');
-                const isDarkMode = document.body.classList.contains('dark-mode');
-                
-                darkModeToggle.textContent = isDarkMode ? '☀️ الوضع النهاري' : '🌙 الوضع الليلي';
-                localStorage.setItem('darkMode', isDarkMode ? 'enabled' : 'disabled');
-                
-                // إعادة رسم الرسوم البيانية لتطبيق الألوان الجديدة
-                document.querySelectorAll('canvas').forEach(canvas => {
-                    const chart = Chart.getChart(canvas);
-                    if (chart) chart.destroy();
-                });
-                if (recommendationsContainer.innerHTML !== '') {
-                    const recommendations = JSON.parse(localStorage.getItem('lastRecommendations'));
-                    if (recommendations) displayRecommendations(recommendations);
-                }
-            });
             
             // تحليل العملات عند النقر على الزر
             analyzeBtn.addEventListener('click', analyzeCoins);
@@ -279,7 +202,6 @@
                     
                     simulateProgress();
                     const recommendations = await getBinanceData(limit, interval);
-                    localStorage.setItem('lastRecommendations', JSON.stringify(recommendations));
                     displayRecommendations(recommendations);
                     
                 } catch (error) {
@@ -317,20 +239,20 @@
                     // 4. أخذ العدد المطلوب
                     const topCoins = sortedCoins.slice(0, limit);
                     
-                    // 5. جلب بيانات إضافية لكل عملة (بيانات الشموع الكاملة)
+                    // 5. جلب بيانات إضافية لكل عملة
                     const coinsWithDetails = await Promise.all(
                         topCoins.map(async coin => {
+                            // جلب بيانات الشموع التاريخية
                             const klinesUrl = `https://api.binance.com/api/v3/klines?symbol=${coin.symbol}&interval=${interval}&limit=100`;
                             const klinesResponse = await fetch(klinesUrl);
                             const klines = await klinesResponse.json();
                             
-                            // استخراج بيانات الشموع (فتح - أعلى - أدنى - إغلاق - حجم)
-                            const opens = klines.map(k => parseFloat(k[1]));
+                            // استخراج الأسعار التاريخية
+                            const closes = klines.map(k => parseFloat(k[4]));
                             const highs = klines.map(k => parseFloat(k[2]));
                             const lows = klines.map(k => parseFloat(k[3]));
-                            const closes = klines.map(k => parseFloat(k[4]));
-                            const volumes = klines.map(k => parseFloat(k[5]));
                             
+                            // حساب الأهداف (3 مستويات فوق السعر الحالي)
                             const currentPrice = parseFloat(coin.lastPrice);
                             const targets = [
                                 currentPrice * 1.02,
@@ -347,11 +269,7 @@
                                 support: Math.min(...lows),
                                 resistance: Math.max(...highs),
                                 targets: targets,
-                                history: closes,
-                                openPrices: opens,
-                                highPrices: highs,
-                                lowPrices: lows,
-                                volumes: volumes
+                                history: closes // للرسم البياني
                             };
                         })
                     );
@@ -365,7 +283,7 @@
             }
             
             function calculateRSI(closes) {
-                if (closes.length < 14) return 50;
+                if (closes.length < 14) return 50; // قيمة افتراضية إذا لم تكف البيانات
                 
                 let gains = 0;
                 let losses = 0;
@@ -379,7 +297,7 @@
                 const avgGain = gains / 14;
                 const avgLoss = losses / 14;
                 
-                if (avgLoss === 0) return 100;
+                if (avgLoss === 0) return 100; // تجنب القسمة على صفر
                 
                 const rs = avgGain / avgLoss;
                 return 100 - (100 / (1 + rs));
@@ -452,88 +370,42 @@
                     `;
                     
                     recommendationsContainer.appendChild(coinEl);
-                    renderCandlestickChart(`chart-${coin.symbol}`, coin);
+                    renderChart(`chart-${coin.symbol}`, coin);
                 });
             }
             
-            function renderCandlestickChart(canvasId, coinData) {
+            function renderChart(canvasId, coinData) {
                 const ctx = document.getElementById(canvasId).getContext('2d');
-                const isDarkMode = document.body.classList.contains('dark-mode');
-                
-                // تحضير بيانات الشموع
-                const candleData = [];
-                for (let i = 0; i < coinData.history.length; i++) {
-                    candleData.push({
-                        x: new Date(Date.now() - (coinData.history.length - i) * 3600000),
-                        o: coinData.openPrices[i],
-                        h: coinData.highPrices[i],
-                        l: coinData.lowPrices[i],
-                        c: coinData.history[i]
-                    });
-                }
+                const labels = Array.from({length: coinData.history.length}, (_, i) => `قبل ${coinData.history.length - i} شمعة`);
                 
                 new Chart(ctx, {
-                    type: 'candlestick',
+                    type: 'line',
                     data: {
+                        labels: labels,
                         datasets: [{
-                            label: coinData.symbol,
-                            data: candleData,
-                            color: {
-                                up: isDarkMode ? '#2ecc71' : '#27ae60',
-                                down: isDarkMode ? '#e74c3c' : '#c0392b',
-                                unchanged: '#999',
-                            },
-                            borderColor: isDarkMode ? '#bb86fc' : '#3498db',
-                            borderWidth: 1,
+                            label: `سعر ${coinData.symbol}`,
+                            data: coinData.history,
+                            borderColor: '#3498db',
+                            backgroundColor: 'rgba(52, 152, 219, 0.1)',
+                            tension: 0.4,
+                            fill: true
                         }]
                     },
                     options: {
                         responsive: true,
-                        maintainAspectRatio: false,
                         plugins: {
-                            legend: { display: false },
-                            tooltip: {
-                                callbacks: {
-                                    label: function(context) {
-                                        const data = context.raw;
-                                        return [
-                                            `فتح: ${data.o.toFixed(4)}`,
-                                            `عالي: ${data.h.toFixed(4)}`,
-                                            `منخفض: ${data.l.toFixed(4)}`,
-                                            `إغلاق: ${data.c.toFixed(4)}`
-                                        ];
-                                    }
-                                }
+                            legend: {
+                                display: false
                             }
                         },
                         scales: {
                             x: {
-                                type: 'time',
-                                time: {
-                                    unit: 'hour',
-                                    displayFormats: {
-                                        hour: 'HH:mm'
-                                    }
-                                },
-                                grid: { 
-                                    display: false,
-                                    color: isDarkMode ? '#444' : '#eee'
-                                },
-                                ticks: { 
-                                    color: isDarkMode ? '#e0e0e0' : '#666',
-                                    maxRotation: 0
+                                grid: {
+                                    display: false
                                 }
                             },
                             y: {
-                                ticks: { 
-                                    color: isDarkMode ? '#e0e0e0' : '#666',
-                                    callback: function(value) {
-                                        return value.toFixed(4);
-                                    }
-                                },
-                                grid: { 
-                                    color: isDarkMode ? '#444' : '#eee'
-                                }
+                                beginAtZero: false
                             }
                         }
                     }
@@ -541,62 +413,5 @@
             }
         });
     </script>
-
-<!-- Chart.js + Luxon + Financial plugin setup -->
-<script src="https://cdn.jsdelivr.net/npm/chart.js@3.9.1/dist/chart.min.js"></script>
-<script src="https://cdn.jsdelivr.net/npm/luxon@3.4.3/build/global/luxon.min.js"></script>
-<script src="https://cdn.jsdelivr.net/npm/chartjs-adapter-luxon@1.3.1/dist/chartjs-adapter-luxon.min.js"></script>
-<script src="https://cdn.jsdelivr.net/npm/chartjs-chart-financial@3.3.0/dist/chartjs-chart-financial.min.js"></script>
-
-<script>
-  const { Chart, FinancialController, CandlestickController, FinancialElement, TimeScale, LinearScale, Tooltip, Legend, Title } = window;
-
-  Chart.register(
-    FinancialController,
-    CandlestickController,
-    FinancialElement,
-    TimeScale,
-    LinearScale,
-    Tooltip,
-    Legend,
-    Title
-  );
-
-  // Optional: Enable title plugin globally (safe setup)
-  Chart.defaults.plugins.title.display = true;
-</script>
-
-
-<!-- Chart.js + Luxon + Financial plugin setup -->
-<script src="https://cdn.jsdelivr.net/npm/chart.js@3.9.1/dist/chart.min.js"></script>
-<script src="https://cdn.jsdelivr.net/npm/luxon@3.4.3/build/global/luxon.min.js"></script>
-<script src="https://cdn.jsdelivr.net/npm/chartjs-adapter-luxon@1.3.1/dist/chartjs-adapter-luxon.min.js"></script>
-<script src="https://cdn.jsdelivr.net/npm/chartjs-chart-financial@3.3.0/dist/chartjs-chart-financial.min.js"></script>
-
-<script>
-  const {
-    Chart,
-    FinancialController,
-    CandlestickController,
-    FinancialElement,
-    TimeScale,
-    LinearScale,
-    Tooltip,
-    Legend,
-    Title
-  } = window;
-
-  Chart.register(
-    FinancialController,
-    CandlestickController,
-    FinancialElement,
-    TimeScale,
-    LinearScale,
-    Tooltip,
-    Legend,
-    Title
-  );
-</script>
-
 </body>
 </html>
