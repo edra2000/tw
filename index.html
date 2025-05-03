@@ -4,80 +4,208 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>توصيات-ياسر</title>
-    
-    <!-- مكتبات أساسية مع روابط بديلة -->
+    <!-- المكتبات المطلوبة -->
     <script src="https://cdn.jsdelivr.net/npm/chart.js@3.9.1/dist/chart.min.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/chartjs-adapter-date-fns@2.3.0/dist/chartjs-adapter-date-fns.min.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/chartjs-chart-financial@1.2.0/dist/chartjs-chart-financial.min.js"></script>
     
     <style>
-        /* أنماط CSS الأساسية */
+        :root {
+            --bg-color: #f5f5f5;
+            --container-bg: #F5F5F7;
+            --text-color: #333;
+            --heading-color: #2c3e50;
+            --controls-bg: #ecf0f1;
+            --card-bg: white;
+            --border-color: #eee;
+            --button-bg: #3498db;
+            --button-hover: #2980b9;
+            --detail-bg: #f9f9f9;
+            --target-bg: #f1f9fe;
+            --positive-bg: rgba(46, 204, 113, 0.2);
+            --positive-text: #27ae60;
+            --negative-bg: rgba(231, 76, 60, 0.2);
+            --negative-text: #c0392b;
+            --candle-up: #27ae60;
+            --candle-down: #c0392b;
+            --grid-color: #eee;
+        }
+
+        .dark-mode {
+            --bg-color: #121212;
+            --container-bg: #1e1e1e;
+            --text-color: #e0e0e0;
+            --heading-color: #bb86fc;
+            --controls-bg: #2d2d2d;
+            --card-bg: #2d2d2d;
+            --border-color: #444;
+            --button-bg: #bb86fc;
+            --button-hover: #9a67ea;
+            --detail-bg: #333;
+            --target-bg: #333;
+            --positive-bg: rgba(46, 204, 113, 0.3);
+            --positive-text: #2ecc71;
+            --negative-bg: rgba(231, 76, 60, 0.3);
+            --negative-text: #e74c3c;
+            --candle-up: #2ecc71;
+            --candle-down: #e74c3c;
+            --grid-color: #444;
+        }
+
         body {
-            font-family: Arial, sans-serif;
+            font-family: 'Arial', sans-serif;
+            background-color: var(--bg-color);
             margin: 0;
             padding: 20px;
-            background-color: #f5f5f5;
-            color: #333;
+            color: var(--text-color);
+            transition: all 0.3s ease;
         }
-        /* ... (أبقِ بقية الأنماط كما هي) ... */
+        
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+            background: var(--container-bg);
+            padding: 20px;
+            border-radius: 10px;
+            box-shadow: 0 0 10px rgba(0,0,0,0.1);
+        }
+        
+        /* ... (ابقى على بقية الأنماط كما هي في الكود السابق) ... */
     </style>
 </head>
 <body>
-    <!-- ... (أبقِ هيكل HTML كما هو) ... -->
+    <!-- ... (ابقى على هيكل HTML كما هو) ... -->
 
     <script>
-        // دالة لتحميل المكتبات بشكل آمن
-        function loadLibrary(src) {
-            return new Promise((resolve, reject) => {
-                const script = document.createElement('script');
-                script.src = src;
-                script.onload = resolve;
-                script.onerror = () => reject(new Error(`فشل تحميل المكتبة: ${src}`));
-                document.head.appendChild(script);
-            });
+        // ... (ابقى على المتغيرات الأولية كما هي) ...
+        
+        // دالة مساعدة لتحويل الفترة الزمنية
+        function getIntervalMilliseconds(interval) {
+            const hour = 60 * 60 * 1000;
+            switch(interval) {
+                case '1h': return hour;
+                case '4h': return 4 * hour;
+                case '1d': return 24 * hour;
+                default: return hour;
+            }
         }
 
-        async function loadRequiredLibraries() {
-            const libraries = [
-                'https://cdn.jsdelivr.net/npm/chart.js@3.9.1/dist/chart.min.js',
-                'https://cdn.jsdelivr.net/npm/chartjs-adapter-date-fns@2.3.0/dist/chartjs-adapter-date-fns.min.js',
-                'https://cdn.jsdelivr.net/npm/chartjs-chart-financial@1.2.0/dist/chartjs-chart-financial.min.js'
-            ];
-            
+        async function getBinanceData(limit, interval) {
             try {
-                await Promise.all(libraries.map(loadLibrary));
+                const response = await fetch('https://api.binance.com/api/v3/ticker/24hr');
+                const allCoins = await response.json();
+                const usdtPairs = allCoins.filter(coin => coin.symbol.endsWith('USDT'));
+                const sortedCoins = usdtPairs.sort((a, b) => 
+                    parseFloat(b.priceChangePercent) - parseFloat(a.priceChangePercent)
+                );
+                const topCoins = sortedCoins.slice(0, limit);
+
+                const coinsWithDetails = await Promise.all(
+                    topCoins.map(async coin => {
+                        const klinesUrl = `https://api.binance.com/api/v3/klines?symbol=${coin.symbol}&interval=${interval}&limit=100`;
+                        const klinesResponse = await fetch(klinesUrl);
+                        const klines = await klinesResponse.json();
+                        
+                        return {
+                            symbol: coin.symbol,
+                            current_price: parseFloat(coin.lastPrice),
+                            change_24h: parseFloat(coin.priceChangePercent),
+                            volume: parseFloat(coin.quoteVolume),
+                            history: klines.map(k => parseFloat(k[4])),
+                            openPrices: klines.map(k => parseFloat(k[1])),
+                            highPrices: klines.map(k => parseFloat(k[2])),
+                            lowPrices: klines.map(k => parseFloat(k[3])),
+                            timestamps: klines.map(k => k[0])
+                        };
+                    })
+                );
                 
-                // تأخر إضافي لضمان تحميل المكتبات
-                await new Promise(resolve => setTimeout(resolve, 100));
-                
-                if (!window.Chart || !window.Chart.controllers?.candlestick) {
-                    throw new Error('المكتبات لم يتم تهيئتها بشكل صحيح');
-                }
+                return coinsWithDetails;
             } catch (error) {
-                console.error('Error loading libraries:', error);
+                console.error('Error:', error);
                 throw error;
             }
         }
 
-        async function initializeApp() {
-            try {
-                // تحميل المكتبات أولاً
-                await loadRequiredLibraries();
-                
-                // ... (أبقِ بقية كود التهيئة كما هو) ...
-                
-            } catch (error) {
-                console.error('Initialization error:', error);
-                const errorEl = document.getElementById('error');
-                if (errorEl) {
-                    errorEl.textContent = 'حدث خطأ في تحميل التطبيق: ' + error.message;
-                    errorEl.style.display = 'block';
+        function renderCandlestickChart(canvasId, coinData) {
+            const ctx = document.getElementById(canvasId);
+            const isDarkMode = document.body.classList.contains('dark-mode');
+            
+            // تحضير بيانات الشموع
+            const candlestickData = coinData.timestamps.map((timestamp, i) => ({
+                x: new Date(timestamp),
+                o: coinData.openPrices[i],
+                h: coinData.highPrices[i],
+                l: coinData.lowPrices[i],
+                c: coinData.history[i]
+            }));
+
+            new Chart(ctx, {
+                type: 'candlestick',
+                data: {
+                    datasets: [{
+                        label: coinData.symbol,
+                        data: candlestickData,
+                        color: {
+                            up: isDarkMode ? '#2ecc71' : '#27ae60',
+                            down: isDarkMode ? '#e74c3c' : '#c0392b',
+                            unchanged: '#999',
+                        },
+                        borderColor: isDarkMode ? '#bb86fc' : '#3498db',
+                        borderWidth: 1,
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    scales: {
+                        x: {
+                            type: 'time',
+                            time: {
+                                unit: intervalSelect.value === '1d' ? 'day' : 'hour',
+                                tooltipFormat: 'PPpp',
+                                displayFormats: {
+                                    hour: 'HH:mm',
+                                    day: 'MMM d'
+                                }
+                            },
+                            grid: {
+                                color: isDarkMode ? '#444' : '#eee'
+                            },
+                            ticks: {
+                                color: isDarkMode ? '#e0e0e0' : '#666'
+                            }
+                        },
+                        y: {
+                            ticks: {
+                                color: isDarkMode ? '#e0e0e0' : '#666'
+                            },
+                            grid: {
+                                color: isDarkMode ? '#444' : '#eee'
+                            }
+                        }
+                    },
+                    plugins: {
+                        legend: { display: false },
+                        tooltip: {
+                            callbacks: {
+                                label: function(context) {
+                                    const data = context.raw;
+                                    return [
+                                        `فتح: ${data.o.toFixed(4)}`,
+                                        `عالي: ${data.h.toFixed(4)}`,
+                                        `منخفض: ${data.l.toFixed(4)}`,
+                                        `إغلاق: ${data.c.toFixed(4)}`
+                                    ];
+                                }
+                            }
+                        }
+                    }
                 }
-            }
+            });
         }
 
-        // بدء التطبيق بعد تحميل الصفحة
-        document.addEventListener('DOMContentLoaded', initializeApp);
+        // ... (ابقى على بقية الدوال كما هي) ...
     </script>
 </body>
 </html>
