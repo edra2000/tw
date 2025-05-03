@@ -5,6 +5,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>توصيات-ياسر</title>
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/chartjs-plugin-annotation@1.0.2"></script>
     <style>
         body {
             font-family: 'Arial', sans-serif;
@@ -395,36 +396,73 @@
                 }
             }
             
-            function calculateRSI(closes) {
-                if (closes.length < 14) return 50;
+            function calculateRSI(closes, period = 14) {
+                if (closes.length < period) return Array(closes.length).fill(50);
                 
-                let gains = 0;
-                let losses = 0;
+                const rsiValues = [];
+                let avgGain = 0;
+                let avgLoss = 0;
                 
-                for (let i = 1; i <= 14; i++) {
+                // حساب القيم الأولية
+                for (let i = 1; i <= period; i++) {
                     const diff = closes[i] - closes[i-1];
-                    if (diff >= 0) gains += diff;
-                    else losses -= diff;
+                    if (diff >= 0) avgGain += diff;
+                    else avgLoss -= diff;
                 }
                 
-                const avgGain = gains / 14;
-                const avgLoss = losses / 14;
+                avgGain /= period;
+                avgLoss /= period;
                 
-                if (avgLoss === 0) return 100;
+                // القيمة الأولى لـ RSI
+                let rs = avgLoss === 0 ? 100 : avgGain / avgLoss;
+                rsiValues.push(100 - (100 / (1 + rs)));
                 
-                const rs = avgGain / avgLoss;
-                return 100 - (100 / (1 + rs));
+                // حساب بقية القيم
+                for (let i = period + 1; i < closes.length; i++) {
+                    const diff = closes[i] - closes[i-1];
+                    let gain = 0;
+                    let loss = 0;
+                    
+                    if (diff >= 0) gain = diff;
+                    else loss = -diff;
+                    
+                    avgGain = (avgGain * (period - 1) + gain) / period;
+                    avgLoss = (avgLoss * (period - 1) + loss) / period;
+                    
+                    rs = avgLoss === 0 ? 100 : avgGain / avgLoss;
+                    rsiValues.push(100 - (100 / (1 + rs)));
+                }
+                
+                // تعبئة القيم المفقودة بـ 50
+                return Array(closes.length - rsiValues.length).fill(50).concat(rsiValues);
             }
-            
+
             function calculateMACD(closes, fastPeriod = 12, slowPeriod = 26, signalPeriod = 9) {
                 const fastEMA = calculateEMA(closes, fastPeriod);
                 const slowEMA = calculateEMA(closes, slowPeriod);
-                const macdLine = fastEMA.map((val, i) => val - slowEMA[i]);
+                
+                // حساب خط MACD
+                const macdLine = [];
+                for (let i = 0; i < closes.length; i++) {
+                    macdLine.push(fastEMA[i] - slowEMA[i]);
+                }
+                
+                // حساب خط الإشارة (EMA لخط MACD)
                 const signalLine = calculateEMA(macdLine, signalPeriod);
-                const histogram = macdLine.map((val, i) => val - signalLine[i]);
-                return { macdLine, signalLine, histogram };
+                
+                // حساب الهيستوجرام
+                const histogram = [];
+                for (let i = 0; i < closes.length; i++) {
+                    histogram.push(macdLine[i] - signalLine[i]);
+                }
+                
+                return {
+                    macdLine,
+                    signalLine,
+                    histogram
+                };
             }
-            
+
             function calculateEMA(data, period) {
                 const k = 2 / (period + 1);
                 const ema = [];
@@ -475,7 +513,7 @@
                             </div>
                             <div class="detail-item">
                                 <div class="detail-label">مؤشر RSI</div>
-                                <div class="detail-value">${coin.rsi.toFixed(2)}</div>
+                                <div class="detail-value">${coin.rsi[coin.rsi.length - 1].toFixed(2)}</div>
                             </div>
                             <div class="detail-item">
                                 <div class="detail-label">مستوى الدعم</div>
@@ -594,22 +632,27 @@
                                 label: 'MACD Line',
                                 data: coin.macd.macdLine,
                                 borderColor: isDarkMode ? '#bb86fc' : '#3498db',
-                                borderWidth: 1,
-                                tension: 0.1
+                                borderWidth: 2,
+                                tension: 0.1,
+                                pointRadius: 0
                             },
                             {
                                 label: 'Signal Line',
                                 data: coin.macd.signalLine,
                                 borderColor: isDarkMode ? '#ff9800' : '#e91e63',
-                                borderWidth: 1,
-                                tension: 0.1
+                                borderWidth: 2,
+                                tension: 0.1,
+                                pointRadius: 0
                             },
                             {
                                 label: 'Histogram',
                                 data: coin.macd.histogram,
                                 type: 'bar',
-                                backgroundColor: isDarkMode ? 'rgba(33, 150, 243, 0.8)' : 'rgba(33, 150, 243, 0.6)',
-                                borderColor: 'transparent'
+                                backgroundColor: isDarkMode ? 
+                                    coin.macd.histogram.map(val => val >= 0 ? 'rgba(76, 175, 80, 0.8)' : 'rgba(244, 67, 54, 0.8)') : 
+                                    coin.macd.histogram.map(val => val >= 0 ? 'rgba(46, 204, 113, 0.6)' : 'rgba(231, 76, 60, 0.6)'),
+                                borderColor: 'transparent',
+                                borderWidth: 0
                             }
                         ]
                     },
@@ -619,7 +662,11 @@
                         plugins: { legend: { display: false } },
                         scales: {
                             x: { display: false },
-                            y: { display: true, grid: { color: isDarkMode ? '#444' : '#eee' } }
+                            y: { 
+                                display: true, 
+                                grid: { color: isDarkMode ? '#444' : '#eee' },
+                                ticks: { color: isDarkMode ? '#e0e0e0' : '#666' }
+                            }
                         }
                     }
                 });
@@ -632,23 +679,50 @@
                         labels: labels,
                         datasets: [{
                             label: 'RSI (14)',
-                            data: Array(coin.history.length).fill(coin.rsi),
+                            data: coin.rsi,
                             borderColor: isDarkMode ? '#4caf50' : '#8bc34a',
-                            borderWidth: 1,
-                            tension: 0.1
+                            borderWidth: 2,
+                            tension: 0.1,
+                            pointRadius: 0
                         }]
                     },
                     options: {
                         responsive: true,
                         maintainAspectRatio: false,
-                        plugins: { legend: { display: false } },
+                        plugins: { 
+                            legend: { display: false },
+                            annotation: {
+                                annotations: {
+                                    line30: {
+                                        type: 'line',
+                                        yMin: 30,
+                                        yMax: 30,
+                                        borderColor: isDarkMode ? '#ff9800' : '#e91e63',
+                                        borderWidth: 1,
+                                        borderDash: [6, 6]
+                                    },
+                                    line70: {
+                                        type: 'line',
+                                        yMin: 70,
+                                        yMax: 70,
+                                        borderColor: isDarkMode ? '#ff9800' : '#e91e63',
+                                        borderWidth: 1,
+                                        borderDash: [6, 6]
+                                    }
+                                }
+                            }
+                        },
                         scales: {
                             x: { display: false },
                             y: { 
                                 display: true,
                                 min: 0,
                                 max: 100,
-                                grid: { color: isDarkMode ? '#444' : '#eee' }
+                                grid: { color: isDarkMode ? '#444' : '#eee' },
+                                ticks: { 
+                                    color: isDarkMode ? '#e0e0e0' : '#666',
+                                    stepSize: 10
+                                }
                             }
                         }
                     }
@@ -673,7 +747,11 @@
                         plugins: { legend: { display: false } },
                         scales: {
                             x: { display: false },
-                            y: { display: true, grid: { color: isDarkMode ? '#444' : '#eee' } }
+                            y: { 
+                                display: true, 
+                                grid: { color: isDarkMode ? '#444' : '#eee' },
+                                ticks: { color: isDarkMode ? '#e0e0e0' : '#666' }
+                            }
                         }
                     }
                 });
