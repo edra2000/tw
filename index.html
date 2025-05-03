@@ -1,684 +1,194 @@
 <!DOCTYPE html>
 <html lang="ar" dir="rtl">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>توصيات-ياسر</title>
-    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
-    <style>
-        body {
-            font-family: 'Arial', sans-serif;
-            background-color: #f5f5f5;
-            margin: 0;
-            padding: 20px;
-            color: #333;
-            transition: all 0.3s ease;
-        }
-        .container {
-            max-width: 1200px;
-            margin: 0 auto;
-            background: #F5F5F7;
-            padding: 20px;
-            border-radius: 10px;
-            box-shadow: 0 0 10px rgba(0,0,0,0.1);
-            transition: all 0.3s ease;
-        }
-        h1 {
-            color: #2c3e50;
-            text-align: center;
-            margin-bottom: 30px;
-            transition: color 0.3s ease;
-        }
-        .controls {
-            background: #ecf0f1;
-            padding: 15px;
-            border-radius: 8px;
-            margin-bottom: 20px;
-            display: flex;
-            flex-wrap: wrap;
-            gap: 10px;
-            justify-content: center;
-            transition: all 0.3s ease;
-        }
-        select, button {
-            padding: 10px 15px;
-            border: 1px solid #ddd;
-            border-radius: 5px;
-            font-size: 16px;
-            transition: all 0.3s ease;
-        }
-        button {
-            background-color: #3498db;
-            color: white;
-            cursor: pointer;
-            border: none;
-            transition: background-color 0.3s;
-        }
-        button:hover {
-            background-color: #2980b9;
-        }
-        .recommendation {
-            background: white;
-            border: 1px solid #eee;
-            border-radius: 8px;
-            padding: 15px;
-            margin-bottom: 15px;
-            box-shadow: 0 2px 5px rgba(0,0,0,0.05);
-            transform: scale(0.95);
-            transform-origin: center;
-            transition: all 0.3s ease;
-        }
-        .coin-header {
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            margin-bottom: 10px;
-            padding-bottom: 10px;
-            border-bottom: 1px solid #eee;
-            transition: all 0.3s ease;
-        }
-        .coin-name {
-            font-weight: bold;
-            font-size: 18px;
-            color: #2c3e50;
-            transition: color 0.3s ease;
-        }
-        .price-change {
-            font-weight: bold;
-            padding: 5px 10px;
-            border-radius: 5px;
-        }
-        .positive {
-            background-color: rgba(46, 204, 113, 0.2);
-            color: #27ae60;
-        }
-        .negative {
-            background-color: rgba(231, 76, 60, 0.2);
-            color: #c0392b;
-        }
-        .details {
-            display: grid;
-            grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
-            gap: 15px;
-            margin-bottom: 15px;
-        }
-        .detail-item {
-            background: #f9f9f9;
-            padding: 10px;
-            border-radius: 5px;
-            transition: all 0.3s ease;
-        }
-        .detail-label {
-            font-size: 12px;
-            color: #7f8c8d;
-            margin-bottom: 5px;
-        }
-        .detail-value {
-            font-weight: bold;
-            font-size: 16px;
-        }
-        .targets {
-            margin-top: 15px;
-        }
-        .target {
-            display: flex;
-            justify-content: space-between;
-            padding: 8px;
-            margin-bottom: 5px;
-            border-radius: 5px;
-            background: #f1f9fe;
-            transition: all 0.3s ease;
-        }
-        .target-percentage {
-            color: #27ae60;
-            font-weight: bold;
-            margin-right: 5px;
-        }
-        .target-level {
-            font-weight: bold;
-        }
-        .target-profit {
-            font-weight: bold;
-            color: #27ae60;
-        }
-        .chart-container {
-            height: 300px;
-            margin-top: 20px;
-        }
-        .loading {
-            text-align: center;
-            padding: 20px;
-            display: none;
-        }
-        .error {
-            color: #e74c3c;
-            text-align: center;
-            padding: 20px;
-            display: none;
-        }
-        
-        /* أنماط المؤشرات الجديدة */
-        .indicators-container {
-            display: grid;
-            grid-template-columns: 1fr;
-            gap: 15px;
-            margin-top: 20px;
-        }
-        .indicator-chart {
-            height: 200px;
-            background: var(--indicator-bg, #f9f9f9);
-            border-radius: 8px;
-            padding: 10px;
-        }
-        .indicator-title {
-            font-size: 14px;
-            color: var(--indicator-title, #7f8c8d);
-            margin-bottom: 5px;
-        }
-        
-        /* أنماط الوضع الليلي */
-        body.dark-mode {
-            background-color: #121212;
-            color: #e0e0e0;
-        }
-        .dark-mode .container {
-            background-color: #1e1e1e;
-            box-shadow: 0 0 10px rgba(255,255,255,0.1);
-        }
-        .dark-mode h1 {
-            color: #bb86fc;
-        }
-        .dark-mode .controls {
-            background-color: #2d2d2d;
-        }
-        .dark-mode .recommendation {
-            background-color: #2d2d2d;
-            border-color: #444;
-            box-shadow: 0 2px 5px rgba(255,255,255,0.05);
-        }
-        .dark-mode .coin-header {
-            border-bottom-color: #444;
-        }
-        .dark-mode .coin-name {
-            color: #bb86fc;
-        }
-        .dark-mode .detail-item {
-            background-color: #333;
-        }
-        .dark-mode .detail-label {
-            color: #a0a0a0;
-        }
-        .dark-mode .target {
-            background-color: #333;
-        }
-        .dark-mode .indicator-chart {
-            --indicator-bg: #2d2d2d;
-        }
-        .dark-mode .indicator-title {
-            --indicator-title: #a0a0a0;
-        }
-        
-        /* زر الوضع الليلي */
-        #darkModeToggle {
-            position: fixed;
-            bottom: 20px;
-            right: 20px;
-            z-index: 1000;
-            padding: 10px 15px;
-            border-radius: 50px;
-            background-color: #3498db;
-            color: white;
-            border: none;
-            cursor: pointer;
-            box-shadow: 0 2px 10px rgba(0,0,0,0.2);
-        }
-        .dark-mode #darkModeToggle {
-            background-color: #bb86fc;
-        }
-        
-        @media (max-width: 768px) {
-            .details {
-                grid-template-columns: 1fr;
-            }
-            #darkModeToggle {
-                bottom: 10px;
-                right: 10px;
-                padding: 8px 12px;
-                font-size: 14px;
-            }
-        }
-    </style>
+    <!-- باقي الهيد بدون تغيير -->
 </head>
 <body>
-    <div class="container">
-        <h1>توصيات - ياسر</h1>
-        
-        <div class="controls">
-            <select id="interval">
-                <option value="1h">1 ساعة</option>
-                <option value="4h">4 ساعات</option>
-                <option value="1d" selected>1 يوم</option>
-            </select>
-            <select id="limit">
-                <option value="10">أفضل 10 عملات</option>
-                <option value="20">أفضل 20 عملة</option>
-                <option value="50">أفضل 50 عملة</option>
-            </select>
-            <button id="analyze-btn">تحليل العملات</button>
-            <button id="refresh-btn">تحديث البيانات</button>
-        </div>
-        
-        <div class="loading" id="loading">
-            جاري تحليل البيانات... <span id="progress"></span>
-        </div>
-        
-        <div class="error" id="error"></div>
-        
-        <div id="recommendations-container"></div>
-    </div>
-
-    <button id="darkModeToggle">🌙 الوضع الليلي</button>
+    <!-- باقي البودي بدون تغيير حتى السكربت -->
 
     <script>
-        document.addEventListener('DOMContentLoaded', function() {
-            const analyzeBtn = document.getElementById('analyze-btn');
-            const refreshBtn = document.getElementById('refresh-btn');
-            const intervalSelect = document.getElementById('interval');
-            const limitSelect = document.getElementById('limit');
-            const loadingEl = document.getElementById('loading');
-            const errorEl = document.getElementById('error');
-            const recommendationsContainer = document.getElementById('recommendations-container');
-            const darkModeToggle = document.getElementById('darkModeToggle');
+        // ... (باقي الدوال كما هي حتى calculateRSI)
+
+        function calculateRSI(closes, period = 14) {
+            if (closes.length < period) return Array(closes.length).fill(50);
             
-            // إعداد الوضع الليلي
-            if (localStorage.getItem('darkMode') === 'enabled') {
-                document.body.classList.add('dark-mode');
-                darkModeToggle.textContent = '☀️ الوضع النهاري';
+            const rsiValues = [];
+            let avgGain = 0;
+            let avgLoss = 0;
+            
+            // حساب القيم الأولية
+            for (let i = 1; i <= period; i++) {
+                const diff = closes[i] - closes[i-1];
+                if (diff >= 0) avgGain += diff;
+                else avgLoss -= diff;
             }
             
-            darkModeToggle.addEventListener('click', () => {
-                document.body.classList.toggle('dark-mode');
-                const isDarkMode = document.body.classList.contains('dark-mode');
-                darkModeToggle.textContent = isDarkMode ? '☀️ الوضع النهاري' : '🌙 الوضع الليلي';
-                localStorage.setItem('darkMode', isDarkMode ? 'enabled' : 'disabled');
-            });
+            avgGain /= period;
+            avgLoss /= period;
             
-            analyzeBtn.addEventListener('click', analyzeCoins);
-            refreshBtn.addEventListener('click', analyzeCoins);
+            // القيمة الأولى لـ RSI
+            let rs = avgLoss === 0 ? 100 : avgGain / avgLoss;
+            rsiValues.push(100 - (100 / (1 + rs)));
             
-            analyzeCoins();
-            
-            async function analyzeCoins() {
-                loadingEl.style.display = 'block';
-                errorEl.style.display = 'none';
-                recommendationsContainer.innerHTML = '';
+            // حساب بقية القيم
+            for (let i = period + 1; i < closes.length; i++) {
+                const diff = closes[i] - closes[i-1];
+                let gain = 0;
+                let loss = 0;
                 
-                try {
-                    const interval = intervalSelect.value;
-                    const limit = parseInt(limitSelect.value);
-                    
-                    simulateProgress();
-                    const recommendations = await getBinanceData(limit, interval);
-                    displayRecommendations(recommendations);
-                    
-                } catch (error) {
-                    errorEl.textContent = `حدث خطأ: ${error.message}`;
-                    errorEl.style.display = 'block';
-                } finally {
-                    loadingEl.style.display = 'none';
-                }
+                if (diff >= 0) gain = diff;
+                else loss = -diff;
+                
+                avgGain = (avgGain * (period - 1) + gain) / period;
+                avgLoss = (avgLoss * (period - 1) + loss) / period;
+                
+                rs = avgLoss === 0 ? 100 : avgGain / avgLoss;
+                rsiValues.push(100 - (100 / (1 + rs)));
             }
             
-            function simulateProgress() {
-                let progress = 0;
-                const progressEl = document.getElementById('progress');
-                const interval = setInterval(() => {
-                    progress += 10;
-                    progressEl.textContent = `${progress}%`;
-                    if (progress >= 100) clearInterval(interval);
-                }, 300);
+            // تعبئة القيم المفقودة بـ 50
+            return Array(closes.length - rsiValues.length).fill(50).concat(rsiValues);
+        }
+
+        function calculateMACD(closes, fastPeriod = 12, slowPeriod = 26, signalPeriod = 9) {
+            const fastEMA = calculateEMA(closes, fastPeriod);
+            const slowEMA = calculateEMA(closes, slowPeriod);
+            
+            // حساب خط MACD
+            const macdLine = [];
+            for (let i = 0; i < closes.length; i++) {
+                macdLine.push(fastEMA[i] - slowEMA[i]);
             }
             
-            async function getBinanceData(limit, interval) {
-                try {
-                    const response = await fetch('https://api.binance.com/api/v3/ticker/24hr');
-                    const allCoins = await response.json();
-                    
-                    const usdtPairs = allCoins.filter(coin => coin.symbol.endsWith('USDT'));
-                    
-                    const sortedCoins = usdtPairs.sort((a, b) => 
-                        parseFloat(b.priceChangePercent) - parseFloat(a.priceChangePercent)
-                    );
-                    
-                    const topCoins = sortedCoins.slice(0, limit);
-                    
-                    const coinsWithDetails = await Promise.all(
-                        topCoins.map(async coin => {
-                            const klinesUrl = `https://api.binance.com/api/v3/klines?symbol=${coin.symbol}&interval=${interval}&limit=100`;
-                            const klinesResponse = await fetch(klinesUrl);
-                            const klines = await klinesResponse.json();
-                            
-                            const closes = klines.map(k => parseFloat(k[4]));
-                            const volumes = klines.map(k => parseFloat(k[5]));
-                            const highs = klines.map(k => parseFloat(k[2]));
-                            const lows = klines.map(k => parseFloat(k[3]));
-                            
-                            const rsi = calculateRSI(closes);
-                            const { macdLine, signalLine, histogram } = calculateMACD(closes);
-                            const currentPrice = parseFloat(coin.lastPrice);
-                            
-                            return {
-                                symbol: coin.symbol,
-                                current_price: currentPrice,
-                                change_24h: parseFloat(coin.priceChangePercent),
-                                volume: parseFloat(coin.quoteVolume),
-                                rsi: rsi,
-                                support: Math.min(...lows),
-                                resistance: Math.max(...highs),
-                                targets: [
-                                    currentPrice * 1.02,
-                                    currentPrice * 1.05,
-                                    currentPrice * 1.08
-                                ],
-                                history: closes,
-                                volumes: volumes,
-                                macd: { macdLine, signalLine, histogram }
-                            };
-                        })
-                    );
-                    
-                    return coinsWithDetails;
-                    
-                } catch (error) {
-                    console.error('Error fetching Binance data:', error);
-                    throw new Error('فشل في جلب البيانات من Binance');
-                }
+            // حساب خط الإشارة (EMA لخط MACD)
+            const signalLine = calculateEMA(macdLine, signalPeriod);
+            
+            // حساب الهيستوجرام
+            const histogram = [];
+            for (let i = 0; i < closes.length; i++) {
+                histogram.push(macdLine[i] - signalLine[i]);
             }
             
-            function calculateRSI(closes) {
-                if (closes.length < 14) return 50;
-                
-                let gains = 0;
-                let losses = 0;
-                
-                for (let i = 1; i <= 14; i++) {
-                    const diff = closes[i] - closes[i-1];
-                    if (diff >= 0) gains += diff;
-                    else losses -= diff;
-                }
-                
-                const avgGain = gains / 14;
-                const avgLoss = losses / 14;
-                
-                if (avgLoss === 0) return 100;
-                
-                const rs = avgGain / avgLoss;
-                return 100 - (100 / (1 + rs));
-            }
-            
-            function calculateMACD(closes, fastPeriod = 12, slowPeriod = 26, signalPeriod = 9) {
-                const fastEMA = calculateEMA(closes, fastPeriod);
-                const slowEMA = calculateEMA(closes, slowPeriod);
-                const macdLine = fastEMA.map((val, i) => val - slowEMA[i]);
-                const signalLine = calculateEMA(macdLine, signalPeriod);
-                const histogram = macdLine.map((val, i) => val - signalLine[i]);
-                return { macdLine, signalLine, histogram };
-            }
-            
-            function calculateEMA(data, period) {
-                const k = 2 / (period + 1);
-                const ema = [];
-                let sum = 0;
-                for (let i = 0; i < period; i++) {
-                    sum += data[i];
-                    ema.push(sum / (i + 1));
-                }
-                for (let i = period; i < data.length; i++) {
-                    ema.push(data[i] * k + ema[i - 1] * (1 - k));
-                }
-                return ema;
-            }
-            
-            function displayRecommendations(recommendations) {
-                if (!recommendations || recommendations.length === 0) {
-                    recommendationsContainer.innerHTML = `
-                        <div class="recommendation">
-                            <p>لا توجد توصيات متاحة في الوقت الحالي.</p>
-                        </div>
-                    `;
-                    return;
-                }
-                
-                recommendations.forEach(coin => {
-                    const coinEl = document.createElement('div');
-                    coinEl.className = 'recommendation';
-                    
-                    const changeClass = coin.change_24h >= 0 ? 'positive' : 'negative';
-                    const changeSign = coin.change_24h >= 0 ? '+' : '';
-                    
-                    coinEl.innerHTML = `
-                        <div class="coin-header">
-                            <div class="coin-name">${coin.symbol}</div>
-                            <div class="price-change ${changeClass}">
-                                ${changeSign}${coin.change_24h.toFixed(2)}%
-                            </div>
-                        </div>
-                        
-                        <div class="details">
-                            <div class="detail-item">
-                                <div class="detail-label">السعر الحالي</div>
-                                <div class="detail-value">${coin.current_price.toLocaleString('en-US', {minimumFractionDigits: 2, maximumFractionDigits: 8})} USDT</div>
-                            </div>
-                            <div class="detail-item">
-                                <div class="detail-label">حجم التداول (24h)</div>
-                                <div class="detail-value">${(coin.volume / 1000000).toFixed(2)}M USDT</div>
-                            </div>
-                            <div class="detail-item">
-                                <div class="detail-label">مؤشر RSI</div>
-                                <div class="detail-value">${coin.rsi.toFixed(2)}</div>
-                            </div>
-                            <div class="detail-item">
-                                <div class="detail-label">مستوى الدعم</div>
-                                <div class="detail-value">${coin.support.toLocaleString('en-US', {minimumFractionDigits: 2, maximumFractionDigits: 8})}</div>
-                            </div>
-                            <div class="detail-item">
-                                <div class="detail-label">مستوى المقاومة</div>
-                                <div class="detail-value">${coin.resistance.toLocaleString('en-US', {minimumFractionDigits: 2, maximumFractionDigits: 8})}</div>
-                            </div>
-                        </div>
-                        
-                        <div class="chart-container">
-                            <canvas id="chart-${coin.symbol}"></canvas>
-                        </div>
-                        
-                        <div class="indicators-container">
-                            <div class="indicator-chart">
-                                <div class="indicator-title">MACD</div>
-                                <canvas id="macd-${coin.symbol}"></canvas>
-                            </div>
-                            <div class="indicator-chart">
-                                <div class="indicator-title">RSI (14)</div>
-                                <canvas id="rsi-${coin.symbol}"></canvas>
-                            </div>
-                            <div class="indicator-chart">
-                                <div class="indicator-title">Volume</div>
-                                <canvas id="volume-${coin.symbol}"></canvas>
-                            </div>
-                        </div>
-                        
-                        <div class="targets">
-                            <h3>الأهداف المتوقعة:</h3>
-                            ${coin.targets.map((target, index) => {
-                                const profitPercentages = [2, 5, 8];
-                                const profit = profitPercentages[index];
-                                return `
-                                    <div class="target">
-                                        <div class="target-level">
-                                            الهدف ${index + 1}: 
-                                            ${target.toLocaleString('en-US', {minimumFractionDigits: 2, maximumFractionDigits: 8})} USDT
-                                            <span class="target-percentage">(+${profit}%)</span>
-                                        </div>
-                                    </div>
-                                `;
-                            }).join('')}
-                        </div>
-                    `;
-                    
-                    recommendationsContainer.appendChild(coinEl);
-                    renderChart(`chart-${coin.symbol}`, coin);
-                    renderIndicators(coin);
-                });
-            }
-            
-            function renderChart(canvasId, coinData) {
-                const ctx = document.getElementById(canvasId).getContext('2d');
-                const isDarkMode = document.body.classList.contains('dark-mode');
-                const labels = Array.from({length: coinData.history.length}, (_, i) => `قبل ${coinData.history.length - i} شمعة`);
-                
-                new Chart(ctx, {
-                    type: 'line',
-                    data: {
-                        labels: labels,
-                        datasets: [{
-                            label: `سعر ${coinData.symbol}`,
-                            data: coinData.history,
+            return {
+                macdLine,
+                signalLine,
+                histogram
+            };
+        }
+
+        function renderIndicators(coin) {
+            const isDarkMode = document.body.classList.contains('dark-mode');
+            const labels = Array.from({length: coin.history.length}, (_, i) => ``);
+
+            // إصلاح مشكلة MACD المنقط
+            const macdCtx = document.getElementById(`macd-${coin.symbol}`).getContext('2d');
+            new Chart(macdCtx, {
+                type: 'line',
+                data: {
+                    labels: labels,
+                    datasets: [
+                        {
+                            label: 'MACD Line',
+                            data: coin.macd.macdLine,
                             borderColor: isDarkMode ? '#bb86fc' : '#3498db',
-                            backgroundColor: isDarkMode ? 'rgba(187, 134, 252, 0.1)' : 'rgba(52, 152, 219, 0.1)',
-                            tension: 0.4,
-                            fill: true
-                        }]
-                    },
-                    options: {
-                        responsive: true,
-                        plugins: {
-                            legend: {
-                                display: false
-                            }
+                            borderWidth: 2,
+                            tension: 0.1,
+                            pointRadius: 0 // إزالة النقاط
                         },
-                        scales: {
-                            x: {
-                                grid: {
-                                    display: false,
-                                    color: isDarkMode ? '#444' : '#eee'
+                        {
+                            label: 'Signal Line',
+                            data: coin.macd.signalLine,
+                            borderColor: isDarkMode ? '#ff9800' : '#e91e63',
+                            borderWidth: 2,
+                            tension: 0.1,
+                            pointRadius: 0 // إزالة النقاط
+                        },
+                        {
+                            label: 'Histogram',
+                            data: coin.macd.histogram,
+                            type: 'bar',
+                            backgroundColor: isDarkMode ? 
+                                coin.macd.histogram.map(val => val >= 0 ? 'rgba(76, 175, 80, 0.8)' : 'rgba(244, 67, 54, 0.8)') : 
+                                coin.macd.histogram.map(val => val >= 0 ? 'rgba(46, 204, 113, 0.6)' : 'rgba(231, 76, 60, 0.6)'),
+                            borderColor: 'transparent',
+                            borderWidth: 0
+                        }
+                    ]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    plugins: { legend: { display: false } },
+                    scales: {
+                        x: { display: false },
+                        y: { 
+                            display: true, 
+                            grid: { color: isDarkMode ? '#444' : '#eee' },
+                            ticks: { color: isDarkMode ? '#e0e0e0' : '#666' }
+                        }
+                    }
+                }
+            });
+
+            // إصلاح مشكلة RSI
+            const rsiCtx = document.getElementById(`rsi-${coin.symbol}`).getContext('2d');
+            new Chart(rsiCtx, {
+                type: 'line',
+                data: {
+                    labels: labels,
+                    datasets: [{
+                        label: 'RSI (14)',
+                        data: coin.rsi,
+                        borderColor: isDarkMode ? '#4caf50' : '#8bc34a',
+                        borderWidth: 2,
+                        tension: 0.1,
+                        pointRadius: 0 // إزالة النقاط
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    plugins: { 
+                        legend: { display: false },
+                        annotation: {
+                            annotations: {
+                                line30: {
+                                    type: 'line',
+                                    yMin: 30,
+                                    yMax: 30,
+                                    borderColor: isDarkMode ? '#ff9800' : '#e91e63',
+                                    borderWidth: 1,
+                                    borderDash: [6, 6]
                                 },
-                                ticks: {
-                                    color: isDarkMode ? '#e0e0e0' : '#666'
-                                }
-                            },
-                            y: {
-                                beginAtZero: false,
-                                grid: {
-                                    color: isDarkMode ? '#444' : '#eee'
-                                },
-                                ticks: {
-                                    color: isDarkMode ? '#e0e0e0' : '#666'
+                                line70: {
+                                    type: 'line',
+                                    yMin: 70,
+                                    yMax: 70,
+                                    borderColor: isDarkMode ? '#ff9800' : '#e91e63',
+                                    borderWidth: 1,
+                                    borderDash: [6, 6]
                                 }
                             }
                         }
-                    }
-                });
-            }
-            
-            function renderIndicators(coin) {
-                const isDarkMode = document.body.classList.contains('dark-mode');
-                const labels = Array.from({length: coin.history.length}, (_, i) => ``);
-
-                // رسم MACD
-                const macdCtx = document.getElementById(`macd-${coin.symbol}`).getContext('2d');
-                new Chart(macdCtx, {
-                    type: 'line',
-                    data: {
-                        labels: labels,
-                        datasets: [
-                            {
-                                label: 'MACD Line',
-                                data: coin.macd.macdLine,
-                                borderColor: isDarkMode ? '#bb86fc' : '#3498db',
-                                borderWidth: 1,
-                                tension: 0.1
-                            },
-                            {
-                                label: 'Signal Line',
-                                data: coin.macd.signalLine,
-                                borderColor: isDarkMode ? '#ff9800' : '#e91e63',
-                                borderWidth: 1,
-                                tension: 0.1
-                            },
-                            {
-                                label: 'Histogram',
-                                data: coin.macd.histogram,
-                                type: 'bar',
-                                backgroundColor: isDarkMode ? 'rgba(33, 150, 243, 0.8)' : 'rgba(33, 150, 243, 0.6)',
-                                borderColor: 'transparent'
-                            }
-                        ]
                     },
-                    options: {
-                        responsive: true,
-                        maintainAspectRatio: false,
-                        plugins: { legend: { display: false } },
-                        scales: {
-                            x: { display: false },
-                            y: { display: true, grid: { color: isDarkMode ? '#444' : '#eee' } }
-                        }
-                    }
-                });
-
-                // رسم RSI
-                const rsiCtx = document.getElementById(`rsi-${coin.symbol}`).getContext('2d');
-                new Chart(rsiCtx, {
-                    type: 'line',
-                    data: {
-                        labels: labels,
-                        datasets: [{
-                            label: 'RSI (14)',
-                            data: Array(coin.history.length).fill(coin.rsi),
-                            borderColor: isDarkMode ? '#4caf50' : '#8bc34a',
-                            borderWidth: 1,
-                            tension: 0.1
-                        }]
-                    },
-                    options: {
-                        responsive: true,
-                        maintainAspectRatio: false,
-                        plugins: { legend: { display: false } },
-                        scales: {
-                            x: { display: false },
-                            y: { 
-                                display: true,
-                                min: 0,
-                                max: 100,
-                                grid: { color: isDarkMode ? '#444' : '#eee' }
+                    scales: {
+                        x: { display: false },
+                        y: { 
+                            display: true,
+                            min: 0,
+                            max: 100,
+                            grid: { color: isDarkMode ? '#444' : '#eee' },
+                            ticks: { 
+                                color: isDarkMode ? '#e0e0e0' : '#666',
+                                stepSize: 10
                             }
                         }
                     }
-                });
+                }
+            });
 
-                // رسم Volume
-                const volumeCtx = document.getElementById(`volume-${coin.symbol}`).getContext('2d');
-                new Chart(volumeCtx, {
-                    type: 'bar',
-                    data: {
-                        labels: labels,
-                        datasets: [{
-                            label: 'Volume',
-                            data: coin.volumes,
-                            backgroundColor: isDarkMode ? 'rgba(33, 150, 243, 0.8)' : 'rgba(33, 150, 243, 0.6)',
-                            borderColor: 'transparent'
-                        }]
-                    },
-                    options: {
-                        responsive: true,
-                        maintainAspectRatio: false,
-                        plugins: { legend: { display: false } },
-                        scales: {
-                            x: { display: false },
-                            y: { display: true, grid: { color: isDarkMode ? '#444' : '#eee' } }
-                        }
-                    }
-                });
-            }
-        });
+            // ... (باقي الدوال بدون تغيير)
+        }
     </script>
 </body>
 </html>
