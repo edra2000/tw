@@ -4,12 +4,31 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>توصيات-ياسر</title>
-    <!-- Load libraries with fallback -->
+    <!-- مكتبات أساسية مع روابط احتياطية -->
     <script src="https://cdn.jsdelivr.net/npm/chart.js@3.9.1/dist/chart.min.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/chartjs-adapter-date-fns@2.3.0/dist/chartjs-adapter-date-fns.min.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/chartjs-chart-financial@1.2.0/dist/chartjs-chart-financial.min.js"></script>
+    
     <style>
-        /* ... (ابقى أنماط CSS كما هي) ... */
+        /* أنماط CSS الأساسية */
+        body {
+            font-family: Arial, sans-serif;
+            margin: 0;
+            padding: 20px;
+            background-color: #f5f5f5;
+            color: #333;
+        }
+        
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+            background: white;
+            padding: 20px;
+            border-radius: 10px;
+            box-shadow: 0 0 10px rgba(0,0,0,0.1);
+        }
+        
+        /* ... (أضف بقية الأنماط هنا) ... */
     </style>
 </head>
 <body>
@@ -32,81 +51,68 @@
             <button id="darkModeToggle">🌙 الوضع الليلي</button>
         </div>
         
-        <div class="loading" id="loading">
+        <div class="loading" id="loading" style="display: none;">
             جاري تحليل البيانات... <span id="progress"></span>
         </div>
         
-        <div class="error" id="error"></div>
+        <div class="error" id="error" style="display: none;"></div>
         
         <div id="recommendations-container"></div>
     </div>
 
     <script>
-        // دالة لفحص وجود العناصر
-        function ensureElementExists(id) {
+        // تأكد من وجود العناصر
+        function getElementOrThrow(id) {
             const el = document.getElementById(id);
-            if (!el) {
-                throw new Error(`العنصر #${id} غير موجود في الصفحة`);
-            }
+            if (!el) throw new Error(`Element #${id} not found`);
             return el;
         }
 
-        // دالة لضمان تحميل المكتبات
-        function checkLibrariesLoaded() {
-            if (!window.Chart || !window.Chart.controllers || !window.Chart.controllers.candlestick) {
-                throw new Error('مكتبات الرسوم البيانية لم يتم تحميلها بشكل صحيح');
-            }
-        }
-
-        async function main() {
+        // دالة رئيسية معزولة
+        async function initializeApp() {
             try {
-                // التحقق من العناصر الأساسية
-                const errorEl = ensureElementExists('error');
-                
+                // الحصول على العناصر الأساسية
+                const elements = {
+                    analyzeBtn: getElementOrThrow('analyze-btn'),
+                    refreshBtn: getElementOrThrow('refresh-btn'),
+                    intervalSelect: getElementOrThrow('interval'),
+                    limitSelect: getElementOrThrow('limit'),
+                    loadingEl: getElementOrThrow('loading'),
+                    errorEl: getElementOrThrow('error'),
+                    progressEl: getElementOrThrow('progress'),
+                    container: getElementOrThrow('recommendations-container'),
+                    darkModeToggle: getElementOrThrow('darkModeToggle')
+                };
+
                 // التحقق من المكتبات
-                checkLibrariesLoaded();
-                
-                // الحصول على العناصر
-                const analyzeBtn = ensureElementExists('analyze-btn');
-                const refreshBtn = ensureElementExists('refresh-btn');
-                const intervalSelect = ensureElementExists('interval');
-                const limitSelect = ensureElementExists('limit');
-                const loadingEl = ensureElementExists('loading');
-                const progressEl = ensureElementExists('progress');
-                const recommendationsContainer = ensureElementExists('recommendations-container');
-                const darkModeToggle = ensureElementExists('darkModeToggle');
-                
-                // إعداد الوضع الليلي
-                if (localStorage.getItem('darkMode') === 'enabled') {
-                    document.body.classList.add('dark-mode');
-                    darkModeToggle.textContent = '☀️ الوضع النهاري';
+                if (!window.Chart || !window.Chart.controllers?.candlestick) {
+                    throw new Error('Failed to load required libraries');
                 }
+
+                // إعداد الوضع الليلي
+                elements.darkModeToggle.addEventListener('click', toggleDarkMode);
                 
-                darkModeToggle.addEventListener('click', () => {
-                    document.body.classList.toggle('dark-mode');
-                    const isDarkMode = document.body.classList.contains('dark-mode');
-                    darkModeToggle.textContent = isDarkMode ? '☀️ الوضع النهاري' : '🌙 الوضع الليلي';
-                    localStorage.setItem('darkMode', isDarkMode ? 'enabled' : 'disabled');
-                    
-                    if (recommendationsContainer.innerHTML !== '') {
-                        analyzeCoins();
-                    }
-                });
-
-                // ... (أضف بقية الدوال هنا) ...
-
+                // أحداث الأزرار
+                elements.analyzeBtn.addEventListener('click', analyzeCoins);
+                elements.refreshBtn.addEventListener('click', analyzeCoins);
+                
+                // تحليل أولي
+                await analyzeCoins();
+                
             } catch (error) {
-                console.error('Error:', error);
+                console.error('Initialization error:', error);
                 const errorEl = document.getElementById('error');
                 if (errorEl) {
-                    errorEl.textContent = error.message;
+                    errorEl.textContent = 'حدث خطأ في تحميل التطبيق: ' + error.message;
                     errorEl.style.display = 'block';
                 }
             }
         }
 
+        // ... (أضف بقية الدوال هنا) ...
+
         // بدء التطبيق بعد تحميل الصفحة
-        document.addEventListener('DOMContentLoaded', main);
+        document.addEventListener('DOMContentLoaded', initializeApp);
     </script>
 </body>
 </html>
