@@ -129,6 +129,16 @@
             background: #f1f9fe;
             transition: all 0.3s ease;
         }
+        /* أضف هذه الأنماط الجديدة هنا */
+.target-percentage {
+    color: #27ae60;
+    font-weight: bold;
+    margin-right: 5px;
+}
+
+.dark-mode .target-percentage {
+    color: #2ecc71;
+}
         .target-level {
             font-weight: bold;
         }
@@ -393,75 +403,79 @@
             }
             
             function displayRecommendations(recommendations) {
-                if (!recommendations || recommendations.length === 0) {
-                    recommendationsContainer.innerHTML = `
-                        <div class="recommendation">
-                            <p>لا توجد توصيات متاحة في الوقت الحالي.</p>
+    if (!recommendations || recommendations.length === 0) {
+        recommendationsContainer.innerHTML = `
+            <div class="recommendation">
+                <p>لا توجد توصيات متاحة في الوقت الحالي.</p>
+            </div>
+        `;
+        return;
+    }
+    
+    recommendations.forEach(coin => {
+        const coinEl = document.createElement('div');
+        coinEl.className = 'recommendation';
+        
+        const changeClass = coin.change_24h >= 0 ? 'positive' : 'negative';
+        const changeSign = coin.change_24h >= 0 ? '+' : '';
+        
+        coinEl.innerHTML = `
+            <div class="coin-header">
+                <div class="coin-name">${coin.symbol}</div>
+                <div class="price-change ${changeClass}">
+                    ${changeSign}${coin.change_24h.toFixed(2)}%
+                </div>
+            </div>
+            
+            <div class="details">
+                <div class="detail-item">
+                    <div class="detail-label">السعر الحالي</div>
+                    <div class="detail-value">${coin.current_price.toLocaleString('en-US', {minimumFractionDigits: 2, maximumFractionDigits: 8})} USDT</div>
+                </div>
+                <div class="detail-item">
+                    <div class="detail-label">حجم التداول (24h)</div>
+                    <div class="detail-value">${(coin.volume / 1000000).toFixed(2)}M USDT</div>
+                </div>
+                <div class="detail-item">
+                    <div class="detail-label">مؤشر RSI</div>
+                    <div class="detail-value">${coin.rsi.toFixed(2)}</div>
+                </div>
+                <div class="detail-item">
+                    <div class="detail-label">مستوى الدعم</div>
+                    <div class="detail-value">${coin.support.toLocaleString('en-US', {minimumFractionDigits: 2, maximumFractionDigits: 8})}</div>
+                </div>
+                <div class="detail-item">
+                    <div class="detail-label">مستوى المقاومة</div>
+                    <div class="detail-value">${coin.resistance.toLocaleString('en-US', {minimumFractionDigits: 2, maximumFractionDigits: 8})}</div>
+                </div>
+            </div>
+            
+            <div class="chart-container">
+                <canvas id="chart-${coin.symbol}"></canvas>
+            </div>
+            
+            <div class="targets">
+                <h3>الأهداف المتوقعة:</h3>
+                ${coin.targets.map((target, index) => {
+                    const profitPercentages = [2, 5, 8]; // النسب المئوية للأهداف
+                    const profit = profitPercentages[index];
+                    return `
+                        <div class="target">
+                            <div class="target-level">
+                                الهدف ${index + 1}: 
+                                ${target.toLocaleString('en-US', {minimumFractionDigits: 2, maximumFractionDigits: 8})} USDT
+                                <span class="target-percentage">(+${profit}%)</span>
+                            </div>
                         </div>
                     `;
-                    return;
-                }
-                
-                recommendations.forEach(coin => {
-                    const coinEl = document.createElement('div');
-                    coinEl.className = 'recommendation';
-                    
-                    const changeClass = coin.change_24h >= 0 ? 'positive' : 'negative';
-                    const changeSign = coin.change_24h >= 0 ? '+' : '';
-                    
-                    coinEl.innerHTML = `
-                        <div class="coin-header">
-                            <div class="coin-name">${coin.symbol}</div>
-                            <div class="price-change ${changeClass}">
-                                ${changeSign}${coin.change_24h.toFixed(2)}%
-                            </div>
-                        </div>
-                        
-                        <div class="details">
-                            <div class="detail-item">
-                                <div class="detail-label">السعر الحالي</div>
-                                <div class="detail-value">${coin.current_price.toLocaleString('en-US', {minimumFractionDigits: 2, maximumFractionDigits: 8})} USDT</div>
-                            </div>
-                            <div class="detail-item">
-                                <div class="detail-label">حجم التداول (24h)</div>
-                                <div class="detail-value">${(coin.volume / 1000000).toFixed(2)}M USDT</div>
-                            </div>
-                            <div class="detail-item">
-                                <div class="detail-label">مؤشر RSI</div>
-                                <div class="detail-value">${coin.rsi.toFixed(2)}</div>
-                            </div>
-                            <div class="detail-item">
-                                <div class="detail-label">مستوى الدعم</div>
-                                <div class="detail-value">${coin.support.toLocaleString('en-US', {minimumFractionDigits: 2, maximumFractionDigits: 8})}</div>
-                            </div>
-                            <div class="detail-item">
-                                <div class="detail-label">مستوى المقاومة</div>
-                                <div class="detail-value">${coin.resistance.toLocaleString('en-US', {minimumFractionDigits: 2, maximumFractionDigits: 8})}</div>
-                            </div>
-                        </div>
-                        
-                        <div class="chart-container">
-                            <canvas id="chart-${coin.symbol}"></canvas>
-                        </div>
-                        
-                        <div class="targets">
-                            <h3>الأهداف المتوقعة:</h3>
-                            ${coin.targets.map((target, index) => {
-                                const profit = ((target - coin.current_price) / coin.current_price * 100).toFixed(2);
-                                return `
-                                    <div class="target">
-                                        <div class="target-level">الهدف ${index + 1}: ${target.toLocaleString('en-US', {minimumFractionDigits: 2, maximumFractionDigits: 8})} USDT</div>
-                                        <div class="target-profit">+${profit}%</div>
-                                    </div>
-                                `;
-                            }).join('')}
-                        </div>
-                    `;
-                    
-                    recommendationsContainer.appendChild(coinEl);
-                    renderChart(`chart-${coin.symbol}`, coin);
-                });
-            }
+                }).join('')}
+            </div>
+        `;
+        
+        recommendationsContainer.appendChild(coinEl);
+        renderChart(`chart-${coin.symbol}`, coin);
+    });
+}
             
             function renderChart(canvasId, coinData) {
                 const ctx = document.getElementById(canvasId).getContext('2d');
