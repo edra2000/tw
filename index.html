@@ -550,6 +550,19 @@
                 });
             }
         });
-    </script>
+   
+  
+  const { Chart, FinancialController, CandlestickController, FinancialElement, TimeScale, LinearScale, Tooltip, Title } = window;
+  Chart.register(
+    FinancialController,
+    CandlestickController,
+    FinancialElement,
+    TimeScale,
+    LinearScale,
+    Tooltip,
+    Title
+  );
+
+ </script>
 </body>
 </html>
