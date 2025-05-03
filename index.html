@@ -4,10 +4,12 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>توصيات-ياسر</title>
-    <script src="https://cdn.jsdelivr.net/npm/chart.js@3.7.1"></script>
-    <script src="https://cdn.jsdelivr.net/npm/chartjs-chart-financial@1.0.0"></script>
+    <!-- المكتبات المطلوبة -->
+    <script src="https://cdn.jsdelivr.net/npm/chart.js@3.9.1/dist/chart.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/chartjs-adapter-date-fns@2.3.0/dist/chartjs-adapter-date-fns.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/chartjs-chart-financial@1.2.0/dist/chartjs-chart-financial.min.js"></script>
+    
     <style>
-        /* متغيرات الألوان للوضع العادي */
         :root {
             --bg-color: #f5f5f5;
             --container-bg: #F5F5F7;
@@ -26,9 +28,9 @@
             --negative-text: #c0392b;
             --candle-up: #27ae60;
             --candle-down: #c0392b;
+            --grid-color: #eee;
         }
 
-        /* متغيرات الألوان للوضع الليلي */
         .dark-mode {
             --bg-color: #121212;
             --container-bg: #1e1e1e;
@@ -47,6 +49,7 @@
             --negative-text: #e74c3c;
             --candle-up: #2ecc71;
             --candle-down: #e74c3c;
+            --grid-color: #444;
         }
 
         body {
@@ -55,8 +58,9 @@
             margin: 0;
             padding: 20px;
             color: var(--text-color);
-            transition: background-color 0.3s, color 0.3s;
+            transition: all 0.3s ease;
         }
+        
         .container {
             max-width: 1200px;
             margin: 0 auto;
@@ -64,482 +68,144 @@
             padding: 20px;
             border-radius: 10px;
             box-shadow: 0 0 10px rgba(0,0,0,0.1);
-            transition: background-color 0.3s;
         }
-        h1 {
-            color: var(--heading-color);
-            text-align: center;
-            margin-bottom: 30px;
-            transition: color 0.3s;
-        }
-        .controls {
-            background: var(--controls-bg);
-            padding: 15px;
-            border-radius: 8px;
-            margin-bottom: 20px;
-            display: flex;
-            flex-wrap: wrap;
-            gap: 10px;
-            justify-content: center;
-            transition: background-color 0.3s;
-        }
-        select, button {
-            padding: 10px 15px;
-            border: 1px solid var(--border-color);
-            border-radius: 5px;
-            font-size: 16px;
-            transition: all 0.3s;
-        }
-        button {
-            background-color: var(--button-bg);
-            color: white;
-            cursor: pointer;
-            border: none;
-            transition: background-color 0.3s;
-        }
-        button:hover {
-            background-color: var(--button-hover);
-        }
-        .recommendation {
-            background: var(--card-bg);
-            border: 1px solid var(--border-color);
-            border-radius: 8px;
-            padding: 15px;
-            margin-bottom: 15px;
-            box-shadow: 0 2px 5px rgba(0,0,0,0.05);
-            transition: background-color 0.3s, border-color 0.3s;
-        }
-        .coin-header {
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            margin-bottom: 10px;
-            padding-bottom: 10px;
-            border-bottom: 1px solid var(--border-color);
-        }
-        .coin-name {
-            font-weight: bold;
-            font-size: 18px;
-            color: var(--heading-color);
-        }
-        .price-change {
-            font-weight: bold;
-            padding: 5px 10px;
-            border-radius: 5px;
-        }
-        .positive {
-            background-color: var(--positive-bg);
-            color: var(--positive-text);
-        }
-        .negative {
-            background-color: var(--negative-bg);
-            color: var(--negative-text);
-        }
-        .details {
-            display: grid;
-            grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
-            gap: 15px;
-            margin-bottom: 15px;
-        }
-        .detail-item {
-            background: var(--detail-bg);
-            padding: 10px;
-            border-radius: 5px;
-            transition: background-color 0.3s;
-        }
-        .detail-label {
-            font-size: 12px;
-            color: #7f8c8d;
-            margin-bottom: 5px;
-        }
-        .detail-value {
-            font-weight: bold;
-            font-size: 16px;
-        }
-        .targets {
-            margin-top: 15px;
-        }
-        .target {
-            display: flex;
-            justify-content: space-between;
-            padding: 8px;
-            margin-bottom: 5px;
-            border-radius: 5px;
-            background: var(--target-bg);
-            transition: background-color 0.3s;
-        }
-        .target-level {
-            font-weight: bold;
-        }
-        .target-profit {
-            font-weight: bold;
-            color: var(--positive-text);
-        }
-        .chart-container {
-            height: 300px;
-            margin-top: 20px;
-        }
-        .loading {
-            text-align: center;
-            padding: 20px;
-            display: none;
-        }
-        .error {
-            color: #e74c3c;
-            text-align: center;
-            padding: 20px;
-            display: none;
-        }
-        @media (max-width: 768px) {
-            .details {
-                grid-template-columns: 1fr;
-            }
-        }
+        
+        /* ... (ابقى على بقية الأنماط كما هي في الكود السابق) ... */
     </style>
 </head>
 <body>
-    <div class="container">
-        <h1>توصيات - ياسر</h1>
-        
-        <div class="controls">
-            <select id="interval">
-                <option value="1h">1 ساعة</option>
-                <option value="4h">4 ساعات</option>
-                <option value="1d" selected>1 يوم</option>
-            </select>
-            <select id="limit">
-                <option value="10">أفضل 10 عملات</option>
-                <option value="20">أفضل 20 عملة</option>
-                <option value="50">أفضل 50 عملة</option>
-            </select>
-            <button id="analyze-btn">تحليل العملات</button>
-            <button id="refresh-btn">تحديث البيانات</button>
-            <button id="darkModeToggle">🌙 الوضع الليلي</button>
-        </div>
-        
-        <div class="loading" id="loading">
-            جاري تحليل البيانات... <span id="progress"></span>
-        </div>
-        
-        <div class="error" id="error"></div>
-        
-        <div id="recommendations-container"></div>
-    </div>
+    <!-- ... (ابقى على هيكل HTML كما هو) ... -->
 
     <script>
-        document.addEventListener('DOMContentLoaded', function() {
-            const analyzeBtn = document.getElementById('analyze-btn');
-            const refreshBtn = document.getElementById('refresh-btn');
-            const intervalSelect = document.getElementById('interval');
-            const limitSelect = document.getElementById('limit');
-            const loadingEl = document.getElementById('loading');
-            const errorEl = document.getElementById('error');
-            const recommendationsContainer = document.getElementById('recommendations-container');
-            const darkModeToggle = document.getElementById('darkModeToggle');
-            
-            // Dark Mode Toggle
-            if (localStorage.getItem('darkMode') === 'enabled') {
-                document.body.classList.add('dark-mode');
-                darkModeToggle.textContent = '☀️ الوضع النهاري';
+        // ... (ابقى على المتغيرات الأولية كما هي) ...
+        
+        // دالة مساعدة لتحويل الفترة الزمنية
+        function getIntervalMilliseconds(interval) {
+            const hour = 60 * 60 * 1000;
+            switch(interval) {
+                case '1h': return hour;
+                case '4h': return 4 * hour;
+                case '1d': return 24 * hour;
+                default: return hour;
             }
-            
-            darkModeToggle.addEventListener('click', () => {
-                document.body.classList.toggle('dark-mode');
-                const isDarkMode = document.body.classList.contains('dark-mode');
-                
-                darkModeToggle.textContent = isDarkMode ? '☀️ الوضع النهاري' : '🌙 الوضع الليلي';
-                localStorage.setItem('darkMode', isDarkMode ? 'enabled' : 'disabled');
-                
-                // إعادة رسم الرسوم البيانية لتطبيق الألوان الجديدة
-                document.querySelectorAll('canvas').forEach(canvas => {
-                    const chart = Chart.getChart(canvas);
-                    if (chart) chart.destroy();
-                });
-                if (recommendationsContainer.innerHTML !== '') {
-                    const recommendations = JSON.parse(localStorage.getItem('lastRecommendations'));
-                    if (recommendations) displayRecommendations(recommendations);
-                }
-            });
-            
-            // تحليل العملات عند النقر على الزر
-            analyzeBtn.addEventListener('click', analyzeCoins);
-            refreshBtn.addEventListener('click', analyzeCoins);
-            
-            // تحليل أولي عند تحميل الصفحة
-            analyzeCoins();
-            
-            async function analyzeCoins() {
-                loadingEl.style.display = 'block';
-                errorEl.style.display = 'none';
-                recommendationsContainer.innerHTML = '';
-                
-                try {
-                    const interval = intervalSelect.value;
-                    const limit = parseInt(limitSelect.value);
-                    
-                    simulateProgress();
-                    const recommendations = await getBinanceData(limit, interval);
-                    localStorage.setItem('lastRecommendations', JSON.stringify(recommendations));
-                    displayRecommendations(recommendations);
-                    
-                } catch (error) {
-                    errorEl.textContent = `حدث خطأ: ${error.message}`;
-                    errorEl.style.display = 'block';
-                } finally {
-                    loadingEl.style.display = 'none';
-                }
-            }
-            
-            function simulateProgress() {
-                let progress = 0;
-                const progressEl = document.getElementById('progress');
-                const interval = setInterval(() => {
-                    progress += 10;
-                    progressEl.textContent = `${progress}%`;
-                    if (progress >= 100) clearInterval(interval);
-                }, 300);
-            }
-            
-            async function getBinanceData(limit, interval) {
-                try {
-                    // 1. جلب بيانات 24 ساعة من Binance
-                    const response = await fetch('https://api.binance.com/api/v3/ticker/24hr');
-                    const allCoins = await response.json();
-                    
-                    // 2. تصفية العملات المزدوجة مع USDT
-                    const usdtPairs = allCoins.filter(coin => coin.symbol.endsWith('USDT'));
-                    
-                    // 3. ترتيب حسب نسبة التغير
-                    const sortedCoins = usdtPairs.sort((a, b) => 
-                        parseFloat(b.priceChangePercent) - parseFloat(a.priceChangePercent)
-                    );
-                    
-                    // 4. أخذ العدد المطلوب
-                    const topCoins = sortedCoins.slice(0, limit);
-                    
-                    // 5. جلب بيانات إضافية لكل عملة (بيانات الشموع الكاملة)
-                    const coinsWithDetails = await Promise.all(
-                        topCoins.map(async coin => {
-                            const klinesUrl = `https://api.binance.com/api/v3/klines?symbol=${coin.symbol}&interval=${interval}&limit=100`;
-                            const klinesResponse = await fetch(klinesUrl);
-                            const klines = await klinesResponse.json();
-                            
-                            // استخراج بيانات الشموع (فتح - أعلى - أدنى - إغلاق - حجم)
-                            const opens = klines.map(k => parseFloat(k[1]));
-                            const highs = klines.map(k => parseFloat(k[2]));
-                            const lows = klines.map(k => parseFloat(k[3]));
-                            const closes = klines.map(k => parseFloat(k[4]));
-                            const volumes = klines.map(k => parseFloat(k[5]));
-                            
-                            const currentPrice = parseFloat(coin.lastPrice);
-                            const targets = [
-                                currentPrice * 1.02,
-                                currentPrice * 1.05,
-                                currentPrice * 1.08
-                            ];
-                            
-                            return {
-                                symbol: coin.symbol,
-                                current_price: currentPrice,
-                                change_24h: parseFloat(coin.priceChangePercent),
-                                volume: parseFloat(coin.quoteVolume),
-                                rsi: calculateRSI(closes),
-                                support: Math.min(...lows),
-                                resistance: Math.max(...highs),
-                                targets: targets,
-                                history: closes,
-                                openPrices: opens,
-                                highPrices: highs,
-                                lowPrices: lows,
-                                volumes: volumes
-                            };
-                        })
-                    );
-                    
-                    return coinsWithDetails;
-                    
-                } catch (error) {
-                    console.error('Error fetching Binance data:', error);
-                    throw new Error('فشل في جلب البيانات من Binance');
-                }
-            }
-            
-            function calculateRSI(closes) {
-                if (closes.length < 14) return 50;
-                
-                let gains = 0;
-                let losses = 0;
-                
-                for (let i = 1; i <= 14; i++) {
-                    const diff = closes[i] - closes[i-1];
-                    if (diff >= 0) gains += diff;
-                    else losses -= diff;
-                }
-                
-                const avgGain = gains / 14;
-                const avgLoss = losses / 14;
-                
-                if (avgLoss === 0) return 100;
-                
-                const rs = avgGain / avgLoss;
-                return 100 - (100 / (1 + rs));
-            }
-            
-            function displayRecommendations(recommendations) {
-                if (!recommendations || recommendations.length === 0) {
-                    recommendationsContainer.innerHTML = `
-                        <div class="recommendation">
-                            <p>لا توجد توصيات متاحة في الوقت الحالي.</p>
-                        </div>
-                    `;
-                    return;
-                }
-                
-                recommendations.forEach(coin => {
-                    const coinEl = document.createElement('div');
-                    coinEl.className = 'recommendation';
-                    
-                    const changeClass = coin.change_24h >= 0 ? 'positive' : 'negative';
-                    const changeSign = coin.change_24h >= 0 ? '+' : '';
-                    
-                    coinEl.innerHTML = `
-                        <div class="coin-header">
-                            <div class="coin-name">${coin.symbol}</div>
-                            <div class="price-change ${changeClass}">
-                                ${changeSign}${coin.change_24h.toFixed(2)}%
-                            </div>
-                        </div>
+        }
+
+        async function getBinanceData(limit, interval) {
+            try {
+                const response = await fetch('https://api.binance.com/api/v3/ticker/24hr');
+                const allCoins = await response.json();
+                const usdtPairs = allCoins.filter(coin => coin.symbol.endsWith('USDT'));
+                const sortedCoins = usdtPairs.sort((a, b) => 
+                    parseFloat(b.priceChangePercent) - parseFloat(a.priceChangePercent)
+                );
+                const topCoins = sortedCoins.slice(0, limit);
+
+                const coinsWithDetails = await Promise.all(
+                    topCoins.map(async coin => {
+                        const klinesUrl = `https://api.binance.com/api/v3/klines?symbol=${coin.symbol}&interval=${interval}&limit=100`;
+                        const klinesResponse = await fetch(klinesUrl);
+                        const klines = await klinesResponse.json();
                         
-                        <div class="details">
-                            <div class="detail-item">
-                                <div class="detail-label">السعر الحالي</div>
-                                <div class="detail-value">${coin.current_price.toLocaleString('en-US', {minimumFractionDigits: 2, maximumFractionDigits: 8})} USDT</div>
-                            </div>
-                            <div class="detail-item">
-                                <div class="detail-label">حجم التداول (24h)</div>
-                                <div class="detail-value">${(coin.volume / 1000000).toFixed(2)}M USDT</div>
-                            </div>
-                            <div class="detail-item">
-                                <div class="detail-label">مؤشر RSI</div>
-                                <div class="detail-value">${coin.rsi.toFixed(2)}</div>
-                            </div>
-                            <div class="detail-item">
-                                <div class="detail-label">مستوى الدعم</div>
-                                <div class="detail-value">${coin.support.toLocaleString('en-US', {minimumFractionDigits: 2, maximumFractionDigits: 8})}</div>
-                            </div>
-                            <div class="detail-item">
-                                <div class="detail-label">مستوى المقاومة</div>
-                                <div class="detail-value">${coin.resistance.toLocaleString('en-US', {minimumFractionDigits: 2, maximumFractionDigits: 8})}</div>
-                            </div>
-                        </div>
-                        
-                        <div class="chart-container">
-                            <canvas id="chart-${coin.symbol}"></canvas>
-                        </div>
-                        
-                        <div class="targets">
-                            <h3>الأهداف المتوقعة:</h3>
-                            ${coin.targets.map((target, index) => {
-                                const profit = ((target - coin.current_price) / coin.current_price * 100).toFixed(2);
-                                return `
-                                    <div class="target">
-                                        <div class="target-level">الهدف ${index + 1}: ${target.toLocaleString('en-US', {minimumFractionDigits: 2, maximumFractionDigits: 8})} USDT</div>
-                                        <div class="target-profit">+${profit}%</div>
-                                    </div>
-                                `;
-                            }).join('')}
-                        </div>
-                    `;
-                    
-                    recommendationsContainer.appendChild(coinEl);
-                    renderCandlestickChart(`chart-${coin.symbol}`, coin);
-                });
+                        return {
+                            symbol: coin.symbol,
+                            current_price: parseFloat(coin.lastPrice),
+                            change_24h: parseFloat(coin.priceChangePercent),
+                            volume: parseFloat(coin.quoteVolume),
+                            history: klines.map(k => parseFloat(k[4])),
+                            openPrices: klines.map(k => parseFloat(k[1])),
+                            highPrices: klines.map(k => parseFloat(k[2])),
+                            lowPrices: klines.map(k => parseFloat(k[3])),
+                            timestamps: klines.map(k => k[0])
+                        };
+                    })
+                );
+                
+                return coinsWithDetails;
+            } catch (error) {
+                console.error('Error:', error);
+                throw error;
             }
+        }
+
+        function renderCandlestickChart(canvasId, coinData) {
+            const ctx = document.getElementById(canvasId);
+            const isDarkMode = document.body.classList.contains('dark-mode');
             
-            function renderCandlestickChart(canvasId, coinData) {
-                const ctx = document.getElementById(canvasId).getContext('2d');
-                const isDarkMode = document.body.classList.contains('dark-mode');
-                
-                // تحضير بيانات الشموع
-                const candleData = [];
-                for (let i = 0; i < coinData.history.length; i++) {
-                    candleData.push({
-                        x: new Date(Date.now() - (coinData.history.length - i) * 3600000),
-                        o: coinData.openPrices[i],
-                        h: coinData.highPrices[i],
-                        l: coinData.lowPrices[i],
-                        c: coinData.history[i]
-                    });
-                }
-                
-                new Chart(ctx, {
-                    type: 'candlestick',
-                    data: {
-                        datasets: [{
-                            label: coinData.symbol,
-                            data: candleData,
-                            color: {
-                                up: isDarkMode ? '#2ecc71' : '#27ae60',
-                                down: isDarkMode ? '#e74c3c' : '#c0392b',
-                                unchanged: '#999',
-                            },
-                            borderColor: isDarkMode ? '#bb86fc' : '#3498db',
-                            borderWidth: 1,
-                        }]
-                    },
-                    options: {
-                        responsive: true,
-                        maintainAspectRatio: false,
-                        plugins: {
-                            legend: { display: false },
-                            tooltip: {
-                                callbacks: {
-                                    label: function(context) {
-                                        const data = context.raw;
-                                        return [
-                                            `فتح: ${data.o.toFixed(4)}`,
-                                            `عالي: ${data.h.toFixed(4)}`,
-                                            `منخفض: ${data.l.toFixed(4)}`,
-                                            `إغلاق: ${data.c.toFixed(4)}`
-                                        ];
-                                    }
+            // تحضير بيانات الشموع
+            const candlestickData = coinData.timestamps.map((timestamp, i) => ({
+                x: new Date(timestamp),
+                o: coinData.openPrices[i],
+                h: coinData.highPrices[i],
+                l: coinData.lowPrices[i],
+                c: coinData.history[i]
+            }));
+
+            new Chart(ctx, {
+                type: 'candlestick',
+                data: {
+                    datasets: [{
+                        label: coinData.symbol,
+                        data: candlestickData,
+                        color: {
+                            up: isDarkMode ? '#2ecc71' : '#27ae60',
+                            down: isDarkMode ? '#e74c3c' : '#c0392b',
+                            unchanged: '#999',
+                        },
+                        borderColor: isDarkMode ? '#bb86fc' : '#3498db',
+                        borderWidth: 1,
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    scales: {
+                        x: {
+                            type: 'time',
+                            time: {
+                                unit: intervalSelect.value === '1d' ? 'day' : 'hour',
+                                tooltipFormat: 'PPpp',
+                                displayFormats: {
+                                    hour: 'HH:mm',
+                                    day: 'MMM d'
                                 }
+                            },
+                            grid: {
+                                color: isDarkMode ? '#444' : '#eee'
+                            },
+                            ticks: {
+                                color: isDarkMode ? '#e0e0e0' : '#666'
                             }
                         },
-                        scales: {
-                            x: {
-                                type: 'time',
-                                time: {
-                                    unit: 'hour',
-                                    displayFormats: {
-                                        hour: 'HH:mm'
-                                    }
-                                },
-                                grid: { 
-                                    display: false,
-                                    color: isDarkMode ? '#444' : '#eee'
-                                },
-                                ticks: { 
-                                    color: isDarkMode ? '#e0e0e0' : '#666',
-                                    maxRotation: 0
-                                }
+                        y: {
+                            ticks: {
+                                color: isDarkMode ? '#e0e0e0' : '#666'
                             },
-                            y: {
-                                ticks: { 
-                                    color: isDarkMode ? '#e0e0e0' : '#666',
-                                    callback: function(value) {
-                                        return value.toFixed(4);
-                                    }
-                                },
-                                grid: { 
-                                    color: isDarkMode ? '#444' : '#eee'
+                            grid: {
+                                color: isDarkMode ? '#444' : '#eee'
+                            }
+                        }
+                    },
+                    plugins: {
+                        legend: { display: false },
+                        tooltip: {
+                            callbacks: {
+                                label: function(context) {
+                                    const data = context.raw;
+                                    return [
+                                        `فتح: ${data.o.toFixed(4)}`,
+                                        `عالي: ${data.h.toFixed(4)}`,
+                                        `منخفض: ${data.l.toFixed(4)}`,
+                                        `إغلاق: ${data.c.toFixed(4)}`
+                                    ];
                                 }
                             }
                         }
                     }
-                });
-            }
-        });
+                }
+            });
+        }
+
+        // ... (ابقى على بقية الدوال كما هي) ...
     </script>
 </body>
 </html>
