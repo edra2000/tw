@@ -138,10 +138,6 @@
         .target-level {
             font-weight: bold;
         }
-        .target-profit {
-            font-weight: bold;
-            color: #27ae60;
-        }
         
         /* التنسيق الجديد للمخططات */
         .chart-wrapper {
@@ -152,19 +148,21 @@
         }
         
         .main-chart {
-            flex: 3;
-            height: 350px;
+            flex: 1;
+            width: 50%;
+            height: 300px;
         }
         
         .indicators-sidebar {
             flex: 1;
+            width: 45%;
             display: flex;
             flex-direction: column;
             gap: 15px;
         }
         
         .indicator-chart {
-            height: 110px;
+            height: 100px;
             background: var(--indicator-bg, #f9f9f9);
             border-radius: 8px;
             padding: 10px;
@@ -174,15 +172,6 @@
             font-size: 14px;
             color: var(--indicator-title, #7f8c8d);
             margin-bottom: 5px;
-        }
-        
-        /* ألوان الفوليوم */
-        .volume-up {
-            background-color: rgba(46, 204, 113, 0.7);
-        }
-        
-        .volume-down {
-            background-color: rgba(231, 76, 60, 0.7);
         }
         
         /* أنماط الوضع الليلي */
@@ -226,12 +215,6 @@
         .dark-mode .indicator-title {
             --indicator-title: #a0a0a0;
         }
-        .dark-mode .volume-up {
-            background-color: rgba(46, 204, 113, 0.9);
-        }
-        .dark-mode .volume-down {
-            background-color: rgba(231, 76, 60, 0.9);
-        }
         
         /* زر الوضع الليلي */
         #darkModeToggle {
@@ -266,6 +249,14 @@
             display: none;
         }
         
+        /* تحديث الوقت */
+        .last-update {
+            text-align: left;
+            margin-top: 10px;
+            font-size: 12px;
+            color: #7f8c8d;
+        }
+        
         @media (max-width: 768px) {
             .details {
                 grid-template-columns: 1fr;
@@ -274,7 +265,11 @@
                 flex-direction: column;
             }
             .main-chart {
-                height: 300px;
+                width: 100%;
+                height: 250px;
+            }
+            .indicators-sidebar {
+                width: 100%;
             }
             #darkModeToggle {
                 bottom: 10px;
@@ -304,6 +299,10 @@
             <button id="refresh-btn">تحديث البيانات</button>
         </div>
         
+        <div class="last-update">
+            آخر تحديث: <span id="update-time">لم يتم التحديث بعد</span>
+        </div>
+        
         <div class="loading" id="loading">
             جاري تحليل البيانات... <span id="progress"></span>
         </div>
@@ -325,6 +324,10 @@
             const errorEl = document.getElementById('error');
             const recommendationsContainer = document.getElementById('recommendations-container');
             const darkModeToggle = document.getElementById('darkModeToggle');
+            const updateTimeEl = document.getElementById('update-time');
+            
+            let isUpdating = false;
+            let updateInterval;
             
             // إعداد الوضع الليلي
             if (localStorage.getItem('darkMode') === 'enabled') {
@@ -343,13 +346,26 @@
             analyzeBtn.addEventListener('click', analyzeCoins);
             refreshBtn.addEventListener('click', analyzeCoins);
             
+            // بدء التحديث التلقائي
+            startAutoUpdate();
+            
             // تحليل أولي عند تحميل الصفحة
             analyzeCoins();
             
-            // تحديث تلقائي كل دقيقة
-            setInterval(analyzeCoins, 60000);
+            function startAutoUpdate() {
+                // إيقاف أي تحديث سابق
+                if (updateInterval) {
+                    clearInterval(updateInterval);
+                }
+                
+                // بدء التحديث كل 30 دقيقة (1800000 مللي ثانية)
+                updateInterval = setInterval(analyzeCoins, 1800000);
+            }
             
             async function analyzeCoins() {
+                if (isUpdating) return;
+                
+                isUpdating = true;
                 loadingEl.style.display = 'block';
                 errorEl.style.display = 'none';
                 recommendationsContainer.innerHTML = '';
@@ -366,11 +382,13 @@
                     }
                     
                     displayRecommendations(recommendations);
+                    updateTimeEl.textContent = new Date().toLocaleString();
                     
                 } catch (error) {
                     showError(error.message);
                 } finally {
                     loadingEl.style.display = 'none';
+                    isUpdating = false;
                 }
             }
             
@@ -398,7 +416,8 @@
                     const usdtPairs = allCoins24h.filter(coin => 
                         coin.symbol.endsWith('USDT') && 
                         !coin.symbol.includes('UP') && 
-                        !coin.symbol.includes('DOWN')
+                        !coin.symbol.includes('DOWN') &&
+                        parseFloat(coin.quoteVolume) > 10000
                     );
                     
                     // دمج البيانات
@@ -692,17 +711,6 @@
                 const isDarkMode = document.body.classList.contains('dark-mode');
                 const labels = Array.from({length: coin.history.length}, (_, i) => ``);
                 
-                // إنشاء ألوان الفوليوم حسب اتجاه السعر
-                const volumeColors = [];
-                for (let i = 1; i < coin.history.length; i++) {
-                    if (coin.history[i] >= coin.history[i-1]) {
-                        volumeColors.push('volume-up');
-                    } else {
-                        volumeColors.push('volume-down');
-                    }
-                }
-                volumeColors.push(volumeColors[volumeColors.length-1] || 'volume-up');
-                
                 // رسم MACD
                 const macdCtx = document.getElementById(`macd-${coin.symbol}`).getContext('2d');
                 new Chart(macdCtx, {
@@ -810,8 +818,21 @@
                     }
                 });
                 
-                // رسم Volume
+                // رسم Volume مع الألوان الصحيحة
                 const volumeCtx = document.getElementById(`volume-${coin.symbol}`).getContext('2d');
+                
+                // إنشاء ألوان الفوليوم حسب اتجاه السعر
+                const volumeColors = [];
+                for (let i = 1; i < coin.history.length; i++) {
+                    if (coin.history[i] >= coin.history[i-1]) {
+                        volumeColors.push(isDarkMode ? '#2ecc71' : '#27ae60'); // أخضر
+                    } else {
+                        volumeColors.push(isDarkMode ? '#e74c3c' : '#c0392b'); // أحمر
+                    }
+                }
+                // إضافة لون للقيمة الأخيرة
+                volumeColors.push(volumeColors.length > 0 ? volumeColors[volumeColors.length-1] : (isDarkMode ? '#2ecc71' : '#27ae60'));
+                
                 new Chart(volumeCtx, {
                     type: 'bar',
                     data: {
@@ -820,20 +841,38 @@
                             label: 'Volume',
                             data: coin.volumes,
                             backgroundColor: volumeColors,
-                            borderColor: 'transparent',
-                            borderWidth: 0
+                            borderColor: volumeColors,
+                            borderWidth: 1
                         }]
                     },
                     options: {
                         responsive: true,
                         maintainAspectRatio: false,
-                        plugins: { legend: { display: false } },
+                        plugins: { 
+                            legend: { display: false },
+                            tooltip: {
+                                callbacks: {
+                                    label: function(context) {
+                                        return 'حجم التداول: ' + context.raw.toLocaleString();
+                                    }
+                                }
+                            }
+                        },
                         scales: {
-                            x: { display: false },
+                            x: { 
+                                display: false,
+                                grid: {
+                                    display: false
+                                }
+                            },
                             y: { 
-                                display: true, 
-                                grid: { color: isDarkMode ? '#444' : '#eee' },
-                                ticks: { color: isDarkMode ? '#e0e0e0' : '#666' }
+                                display: true,
+                                grid: { 
+                                    color: isDarkMode ? 'rgba(255,255,255,0.1)' : 'rgba(0,0,0,0.1)'
+                                },
+                                ticks: {
+                                    color: isDarkMode ? '#e0e0e0' : '#666'
+                                }
                             }
                         }
                     }
