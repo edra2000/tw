@@ -490,8 +490,7 @@
         renderChart(`chart-${coin.symbol}`, coin);
     });
 }
-            
-            function renderChart(canvasId, coinData) {
+                        function renderChart(canvasId, coinData) {
                 const ctx = document.getElementById(canvasId).getContext('2d');
                 const isDarkMode = document.body.classList.contains('dark-mode');
                 const labels = Array.from({length: coinData.history.length}, (_, i) => `قبل ${coinData.history.length - i} شمعة`);
@@ -538,8 +537,9 @@
                         }
                     }
                 });
-            }
-        });
+            } // نهاية دالة renderChart
+
+        }); // نهاية document.addEventListener
     </script>
 </body>
 </html>
