@@ -440,7 +440,7 @@
                     const coinsWithDetails = await Promise.all(
                         topCoins.map(async coin => {
                             try {
-                                const klinesUrl = `https://api.binance.com/api/v3/klines?symbol=${coin.symbol}&interval=${interval}&limit=1`;
+                                const klinesUrl = `https://api.binance.com/api/v3/klines?symbol=${coin.symbol}&interval=${interval}&limit=100`;
                                 const klinesResponse = await fetch(klinesUrl);
                                 const klines = await klinesResponse.json();
                                 
