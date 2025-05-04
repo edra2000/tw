@@ -402,32 +402,46 @@
                 }, 300);
             }
             
-            async function getBinanceData(limit, interval) {
-                try {
-                    // جلب بيانات التغيرات اليومية
-                    const response24h = await fetch('https://api.binance.com/api/v3/ticker/24hr');
-                    const allCoins24h = await response24h.json();
-                    
-                    // جلب الأسعار الحالية
-                    const responsePrices = await fetch('https://api.binance.com/api/v3/ticker/price');
-                    const allPrices = await responsePrices.json();
-                    
-                    // تصفية العملات المطلوبة
-                    const usdtPairs = allCoins24h.filter(coin => 
-                        coin.symbol.endsWith('USDT') && 
-                        !coin.symbol.includes('UP') && 
-                        !coin.symbol.includes('DOWN') &&
-                        parseFloat(coin.quoteVolume) > 10000
-                    );
-                    
-                    // دمج البيانات
-                    const mergedData = usdtPairs.map(coin => {
-                        const currentPriceData = allPrices.find(p => p.symbol === coin.symbol) || {};
-                        return {
-                            ...coin,
-                            currentPrice: parseFloat(currentPriceData.price || coin.lastPrice)
-                        };
-                    });
+            async function fetchAccurateData() {
+  try {
+    // 1. جلب البيانات من مصدرين مختلفين
+    const [tickerData, klineData] = await Promise.all([
+      fetch('https://api.binance.com/api/v3/ticker/24hr'),
+      fetch(`https://api.binance.com/api/v3/klines?symbol=ASRUSDT&interval=1d&limit=1`)
+    ]);
+
+    // 2. معالجة البيانات
+    const ticker = await tickerData.json();
+    const kline = await klineData.json();
+
+    // 3. حساب النسبة بدقة
+    const currentPrice = parseFloat(ticker.find(t => t.symbol === 'ASRUSDT').lastPrice);
+    const openPrice = parseFloat(kline[0][1]); // سعر الفتح اليومي
+    const accurateChange = ((currentPrice - openPrice) / openPrice) * 100;
+
+    return {
+      symbol: 'ASRUSDT',
+      change24h: parseFloat(ticker.find(t => t.symbol === 'ASRUSDT').priceChangePercent),
+      changeToday: accurateChange
+    };
+
+  } catch (error) {
+    console.error('Error fetching accurate data:', error);
+    return null;
+  }
+}
+
+// 4. تعديل دالة العرض
+function displayAccurateChange() {
+  fetchAccurateData().then(data => {
+    if (data) {
+      document.getElementById('coin-change').innerHTML = `
+        <span>24h: ${data.change24h.toFixed(2)}%</span>
+        <span>Today: ${data.changeToday.toFixed(2)}%</span>
+      `;
+    }
+  });
+}
                     
                     // ترتيب حسب نسبة التغير
                     const sortedCoins = mergedData.sort((a, b) => 
@@ -440,7 +454,7 @@
                     const coinsWithDetails = await Promise.all(
                         topCoins.map(async coin => {
                             try {
-                                const klinesUrl = `https://api.binance.com/api/v3/klines?symbol=${coin.symbol}&interval=${interval}&limit=100`;
+                                const klinesUrl = `https://api.binance.com/api/v3/klines?symbol=${coin.symbol}&interval=${interval}&limit=1`;
                                 const klinesResponse = await fetch(klinesUrl);
                                 const klines = await klinesResponse.json();
                                 
